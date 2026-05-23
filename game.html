@@ -3,21 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>8gents Prototype</title>
+<title>8gents — Cadence Prototype</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:      #0d1117;
-  --surface: #161b22;
-  --raised:  #21262d;
-  --border:  #30363d;
-  --text:    #e6edf3;
-  --muted:   #7d8590;
-  --accent:  #f78166;
-  --edge-col:#e3b341;
-  --ctr-col: #cc2200;
-  --safe:    #3fb950;
+  --bg:       #0d1117;
+  --surface:  #161b22;
+  --raised:   #21262d;
+  --border:   #30363d;
+  --text:     #e6edf3;
+  --muted:    #7d8590;
+  --accent:   #f78166;
+  --safe:     #3fb950;
+  --signal:   #00d4ff;
+  --warn:     #e3b341;
+  --familiar: #4a9e52;
+  --new-col:  #3d7ab5;
 }
 
 body {
@@ -30,80 +32,166 @@ body {
   align-items: center;
 }
 
-/* ─── SCREENS ─── */
-.screen { width: 100%; max-width: 480px; display: flex; flex-direction: column; }
+.screen {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 .hidden { display: none !important; }
 
-/* ─── HEADER ─── */
+/* ─── SHARED HEADER ─── */
 .hdr {
   display: flex; align-items: center; gap: 10px;
   padding: 12px 16px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
+  flex-shrink: 0;
 }
 .hdr .phase {
   margin-left: auto; font-size: 10px; color: var(--muted);
   text-transform: uppercase; letter-spacing: 1px;
 }
 
-/* ─── MAP: STATS ROW ─── */
-.map-stats {
-  display: flex; gap: 6px; padding: 10px 12px;
-  background: var(--surface); border-bottom: 1px solid var(--border);
-}
-.mstat {
-  flex: 1; background: var(--raised); border-radius: 6px;
-  padding: 8px 6px; text-align: center;
-}
-.mstat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
-.mstat-value { font-size: 17px; font-weight: 700; margin-top: 3px; }
-.vel-critical { color: #ff3333; }
-.vel-high     { color: #ff9900; }
-.vel-moderate { color: var(--edge-col); }
-
-/* ─── SQUAD BAR ─── */
-.squad-bar {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 12px;
+/* ─── CONFIG SCREEN ─── */
+.config-sub {
+  padding: 10px 16px 0;
+  font-size: 11px; color: var(--muted);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-}
-.squad-label {
-  font-size: 9px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 1px;
-  white-space: nowrap; flex-shrink: 0; min-width: 44px;
-}
-.agents-row { display: flex; gap: 5px; flex-wrap: nowrap; }
-.agent-btn {
-  padding: 5px 9px; border-radius: 5px; border: 1px solid var(--border);
-  background: var(--raised); color: var(--muted);
-  font-size: 10px; font-weight: 600; cursor: pointer;
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-  transition: background .15s, color .15s, border-color .15s;
-  user-select: none;
-}
-.agent-btn.active {
-  background: rgba(0, 212, 255, .12);
-  color: #00d4ff;
-  border-color: rgba(0, 212, 255, .45);
-}
-.agent-btn.chain-active {
-  background: rgba(163, 113, 247, .18);
-  color: #a371f7;
-  border-color: rgba(163, 113, 247, .6);
-}
-.squad-hint {
-  font-size: 9px; color: var(--muted); padding: 0 12px 6px;
-  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
   line-height: 1.4;
 }
-.squad-hint .chain-ready { color: #a371f7; font-weight: 700; }
+.config-body {
+  padding: 20px 16px 24px;
+  display: flex; flex-direction: column; gap: 22px;
+  flex: 1; overflow-y: auto;
+}
+.section-label {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--muted); margin-bottom: 10px;
+}
 
-/* ─── MAP: GRID ─── */
-.grid-wrap { padding: 12px; }
+/* Doctrine cards */
+.doctrine-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.doctrine-card {
+  background: var(--raised); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px;
+  cursor: pointer; transition: border-color .15s, background .15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.doctrine-card:active { opacity: .85; }
+.doctrine-card.selected {
+  background: rgba(0,212,255,.07);
+  border-color: rgba(0,212,255,.5);
+}
+.doctrine-name {
+  font-size: 10px; font-weight: 700; letter-spacing: .8px;
+  text-transform: uppercase; margin-bottom: 5px; color: var(--muted);
+}
+.doctrine-card.selected .doctrine-name { color: var(--signal); }
+.doctrine-desc {
+  font-size: 10px; color: var(--muted); line-height: 1.45;
+}
+.doctrine-card.selected .doctrine-desc { color: var(--text); }
+
+/* Monitoring posture */
+.posture-row {
+  display: flex; gap: 6px;
+}
+.posture-btn {
+  flex: 1; padding: 9px 2px;
+  border-radius: 6px; border: 1px solid var(--border);
+  background: var(--raised); color: var(--muted);
+  font-size: 10px; font-weight: 600; cursor: pointer;
+  text-align: center; text-transform: uppercase; letter-spacing: .5px;
+  transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.posture-btn.selected {
+  background: rgba(163,113,247,.1);
+  border-color: rgba(163,113,247,.5);
+  color: #a371f7;
+}
+.posture-hint {
+  font-size: 10px; color: var(--muted); margin-top: 7px;
+  min-height: 14px; line-height: 1.4;
+}
+
+/* Walk objective */
+.objective-row {
+  display: flex; gap: 8px;
+}
+.obj-btn {
+  flex: 1; padding: 12px 8px;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: var(--raised); color: var(--muted);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  text-align: center; transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.obj-btn.selected {
+  background: rgba(63,185,80,.08);
+  border-color: rgba(63,185,80,.5);
+  color: var(--safe);
+}
+
+/* Deploy button */
+.deploy-wrap { padding-top: 4px; }
+.deploy-btn {
+  width: 100%; padding: 16px;
+  border-radius: 10px; border: none;
+  background: var(--signal); color: var(--bg);
+  font-size: 14px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; cursor: pointer;
+  opacity: .3; pointer-events: none;
+  transition: opacity .25s;
+  -webkit-tap-highlight-color: transparent;
+}
+.deploy-btn.ready {
+  opacity: 1; pointer-events: all;
+  animation: deploy-pulse 2.5s ease-in-out infinite;
+}
+@keyframes deploy-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,212,255,.4); }
+  50%      { box-shadow: 0 0 0 8px rgba(0,212,255,0); }
+}
+
+/* ─── WALK SCREEN ─── */
+.walk-stats {
+  display: flex; gap: 5px; padding: 10px 12px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.wstat {
+  flex: 1; background: var(--raised); border-radius: 6px;
+  padding: 8px 4px; text-align: center;
+}
+.wstat-label { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.wstat-value { font-size: 16px; font-weight: 700; margin-top: 2px; }
+
+.walk-context {
+  display: flex; gap: 6px; padding: 7px 12px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  flex-wrap: wrap; flex-shrink: 0;
+}
+.ctx-chip {
+  font-size: 9px; padding: 3px 8px; border-radius: 10px;
+  font-weight: 600; letter-spacing: .5px; text-transform: uppercase;
+}
+.chip-doctrine { background: rgba(0,212,255,.1); color: var(--signal); border: 1px solid rgba(0,212,255,.3); }
+.chip-posture  { background: rgba(163,113,247,.1); color: #a371f7; border: 1px solid rgba(163,113,247,.3); }
+.chip-obj      { background: rgba(63,185,80,.1); color: var(--safe); border: 1px solid rgba(63,185,80,.3); }
+
+/* Territory grid */
+.grid-wrap { padding: 10px 12px 4px; flex-shrink: 0; }
 .grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -112,1303 +200,1023 @@ body {
 .tile {
   aspect-ratio: 1;
   border-radius: 4px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 9px; font-weight: 700;
   position: relative;
+  transition: background .6s, border-color .4s;
   border: 2px solid transparent;
-  transition: transform .1s;
   cursor: default;
-  overflow: hidden;
 }
 
-/* Tile states */
-.tile.clean    { background: #1c2128; }
-.tile.at-risk  { background: #1c2128; border-color: rgba(227,179,65,.35); }
-.tile.at-risk::after {
+/* Visit-count tile classes */
+.tile-unvisited  { background: #0f141a; }
+.tile-new1       { background: #13213b; border-color: rgba(45,100,160,.25); }
+.tile-new2       { background: #192d50; border-color: rgba(45,100,160,.4); }
+.tile-building   { background: #1c2f48; }
+.tile-familiar   { background: #1a2e1c; border-color: rgba(55,110,55,.3); }
+.tile-deep       { background: #223520; border-color: rgba(65,120,55,.4); }
+.tile-entrenched { background: #2b3c18; border-color: rgba(80,140,40,.5); }
+
+/* Player marker */
+.tile-player {
+  border-color: var(--signal) !important;
+  box-shadow: 0 0 0 2px rgba(0,212,255,.35),
+              inset 0 0 10px rgba(0,212,255,.12);
+}
+.tile-player::after {
   content: '';
-  position: absolute; inset: 0;
-  background: rgba(227,179,65,.07);
-  animation: risk-pulse 1.4s ease-in-out infinite;
-}
-.tile.low      { background: #4a1800; }
-.tile.mid      { background: #7a2000; }
-.tile.high     { background: #aa2800; }
-.tile.critical { background: #cc2200; }
-
-/* Boundary: outward radar pulse */
-@keyframes radar {
-  0%   { box-shadow: 0 0 0 0   rgba(227,179,65,.8); }
-  70%  { box-shadow: 0 0 0 6px rgba(227,179,65,0);  }
-  100% { box-shadow: 0 0 0 0   rgba(227,179,65,0);  }
-}
-.tile.boundary { animation: radar 1.2s ease-out infinite; border-color: rgba(227,179,65,.5); }
-@keyframes risk-pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
-
-.tile.tappable { cursor: pointer; }
-.tile.tappable:active { transform: scale(.88); }
-
-/* ─── MAP: LEGEND ─── */
-.legend {
-  display: flex; flex-wrap: wrap; gap: 8px 14px;
-  padding: 0 12px 12px; font-size: 10px; color: var(--muted);
-}
-.leg { display: flex; align-items: center; gap: 5px; }
-.leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
-
-/* ─── MAP: READING GUIDE ─── */
-.reading-guide {
-  margin: 0 12px 16px;
-  background: var(--surface);
-  border-left: 3px solid var(--edge-col);
-  border-radius: 0 6px 6px 0;
-  padding: 10px 12px;
-  font-size: 11px; line-height: 1.6; color: var(--muted);
-}
-.reading-guide b { color: var(--text); }
-
-/* ─── BRIEF SCREEN ─── */
-.brief-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.zone-badge {
-  display: inline-block;
-  padding: 4px 10px; border-radius: 20px;
-  font-size: 11px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase;
-}
-.zone-boundary { background: rgba(227,179,65,.15); color: var(--edge-col); border: 1px solid var(--edge-col); }
-.zone-interior { background: rgba(204,34,0,.15);   color: var(--accent);   border: 1px solid var(--accent); }
-
-.brief-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.brief-stat {
-  background: var(--raised); border-radius: 8px; padding: 10px;
-}
-.brief-stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
-.brief-stat-value { font-size: 18px; font-weight: 700; }
-
-.warn-box {
-  background: rgba(227,179,65,.08);
-  border: 1px solid rgba(227,179,65,.3);
-  border-radius: 8px; padding: 10px 12px;
-  font-size: 11px; line-height: 1.6; color: var(--edge-col);
-}
-.warn-box.interior-warn {
-  background: rgba(204,34,0,.08);
-  border-color: rgba(204,34,0,.3);
-  color: var(--accent);
-}
-
-/* ─── LOADOUT ASSESSMENT ─── */
-.assessment-box {
-  background: rgba(0, 212, 255, .04);
-  border: 1px solid rgba(0, 212, 255, .22);
-  border-radius: 8px; padding: 12px;
-}
-.assessment-header {
-  font-size: 9px; text-transform: uppercase; letter-spacing: 1.2px;
-  color: #00d4ff; font-weight: 700; margin-bottom: 10px;
-}
-.assessment-kv {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 11px; margin-bottom: 8px;
-}
-.assessment-kv .ak { color: var(--muted); }
-.assessment-detail {
-  font-size: 11px; border-radius: 5px;
-  padding: 5px 8px; margin-bottom: 5px; line-height: 1.4;
-}
-.assessment-detail.pos { background: rgba(63,185,80,.1);  color: var(--safe);   }
-.assessment-detail.neg { background: rgba(204,34,0,.1);   color: var(--accent); }
-.assessment-detail.neutral { background: rgba(125,133,144,.1); color: var(--muted); }
-.assessment-prediction {
-  margin-top: 8px; padding-top: 8px;
-  border-top: 1px solid var(--border);
-  font-size: 12px; font-weight: 700; text-align: center;
-  letter-spacing: .3px;
-}
-.pred-good { color: var(--safe);     }
-.pred-warn { color: var(--edge-col); }
-.pred-bad  { color: var(--accent);   }
-
-.brief-btns { display: flex; gap: 8px; }
-.btn {
-  flex: 1; padding: 13px; border-radius: 8px; border: none;
-  font-size: 14px; font-weight: 700; cursor: pointer;
-  letter-spacing: .5px; -webkit-tap-highlight-color: transparent;
-}
-.btn-engage  { background: var(--edge-col); color: #000; }
-.btn-retreat { background: var(--raised); color: var(--muted); border: 1px solid var(--border); }
-
-/* ─── COMBAT SCREEN ─── */
-.combat-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-
-/* HP bar */
-.hp-wrap { background: var(--raised); border-radius: 8px; padding: 10px; }
-.hp-label-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
-.hp-bg { background: #30363d; border-radius: 4px; height: 16px; overflow: hidden; }
-.hp-fill { height: 100%; border-radius: 4px; transition: width .4s, background .4s; }
-
-/* Spread threshold bar */
-.threshold-wrap {
-  background: var(--raised); border-radius: 8px; padding: 10px;
-  border: 1px solid rgba(227,179,65,.2);
-}
-.threshold-label-row {
-  display: flex; justify-content: space-between;
-  font-size: 10px; color: var(--edge-col); text-transform: uppercase;
-  letter-spacing: .5px; margin-bottom: 6px;
-}
-.threshold-bg { background: #30363d; border-radius: 4px; height: 12px; overflow: hidden; position: relative; }
-.threshold-fill {
-  height: 100%; border-radius: 4px;
-  background: linear-gradient(90deg, #3fb950, #e3b341, #ff9900, #cc2200);
-  transition: width .5s;
-}
-.threshold-ticks {
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  display: flex;
-}
-.threshold-tick {
-  flex: 1; border-right: 1px solid rgba(0,0,0,.4);
-}
-.threshold-tick:last-child { border: none; }
-
-/* Combat zones */
-.zone-header {
-  font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
-  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
-}
-.zone-tag {
-  display: inline-block; padding: 2px 7px; border-radius: 4px;
-  font-size: 9px; font-weight: 700;
-}
-.edge-tag { background: rgba(227,179,65,.2); color: var(--edge-col); }
-.ctr-tag  { background: rgba(204,34,0,.2);   color: var(--accent); }
-
-.combat-arena {
-  background: var(--raised);
-  border-radius: 8px; overflow: hidden;
-}
-.edge-zone {
-  padding: 10px;
-  border-bottom: 1px solid var(--border);
-  min-height: 90px;
-}
-.center-zone {
-  padding: 10px;
-  min-height: 90px;
-}
-.nodes-row { display: flex; flex-wrap: wrap; gap: 8px; }
-
-/* Node buttons */
-.node-btn {
-  width: 52px; height: 52px;
+  position: absolute;
+  width: 7px; height: 7px;
   border-radius: 50%;
-  border: 2px solid;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px; font-weight: 700;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform .1s, opacity .3s;
+  background: var(--signal);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  box-shadow: 0 0 6px var(--signal);
+}
+
+/* Anomaly marker */
+.tile-anomaly {
+  border-color: var(--warn) !important;
+  animation: anomaly-pulse 1s ease-in-out infinite;
+}
+@keyframes anomaly-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(227,179,65,.7); }
+  50%      { box-shadow: 0 0 0 5px rgba(227,179,65,0); }
+}
+
+/* Territory legend */
+.territory-legend {
+  display: flex; gap: 10px 16px; flex-wrap: wrap;
+  padding: 4px 12px 8px; font-size: 9px; color: var(--muted);
   flex-shrink: 0;
 }
-.node-btn:active { transform: scale(.85); }
-.node-btn.dead { opacity: .2; cursor: default; transform: none !important; }
+.tleg { display: flex; align-items: center; gap: 5px; }
+.tleg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 
-.node-edge {
-  background: rgba(227,179,65,.15);
-  border-color: var(--edge-col);
-  color: var(--edge-col);
-  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-  border-radius: 4px;
+/* Companion feed */
+.companion-feed {
+  flex: 1; display: flex; flex-direction: column; justify-content: flex-end;
+  gap: 4px; padding: 6px 12px 8px; min-height: 90px;
 }
-
-@keyframes edge-pulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(227,179,65,.6); }
-  50%      { box-shadow: 0 0 0 8px rgba(227,179,65,0); }
+.companion-line {
+  font-size: 11px; line-height: 1.5;
+  padding: 7px 10px; border-radius: 6px;
+  background: var(--surface);
+  border-left: 2px solid var(--border);
+  color: var(--muted);
+  animation: fade-in .35s ease-out forwards;
 }
-.node-edge:not(.dead) { animation: edge-pulse 1.2s ease-out infinite; }
-
-.node-center {
-  background: rgba(204,34,0,.2);
-  border-color: var(--ctr-col);
+.companion-line.advisory {
+  border-left-color: var(--warn);
+  color: var(--warn);
+  background: rgba(227,179,65,.04);
+}
+.companion-line.escalation {
+  border-left-color: var(--accent);
   color: var(--accent);
+  background: rgba(247,129,102,.05);
 }
 
-.zone-empty { font-size: 11px; color: var(--muted); padding: 10px 0; }
-
-/* Combat log */
-.log-wrap {
-  background: var(--surface); border-radius: 8px;
-  padding: 10px; max-height: 140px; overflow-y: auto;
-}
-.log-title { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
-.log-line { font-size: 11px; color: var(--muted); margin-bottom: 3px; line-height: 1.4; }
-.log-line.warn { color: var(--edge-col); }
-.log-line.good { color: var(--safe); }
-.log-line.bad  { color: var(--accent); }
-
-/* ─── CHAIN EVENT LOG ─── */
-.log-line.chain-hdr {
-  color: #a371f7; font-weight: 700; font-size: 11.5px;
-  background: rgba(163, 113, 247, .12);
-  border: 1px solid rgba(163, 113, 247, .35);
-  border-radius: 4px; padding: 4px 6px;
-  text-align: center; margin: 5px 0;
-}
-.log-line.chain     { color: #a371f7; }
-.log-line.chain-arc { color: #00d4ff; font-weight: 600; }
-.log-line.chain-pause {
-  height: 8px;
-  border-top: 1px solid rgba(163, 113, 247, .2);
-  margin: 4px 0;
-  font-size: 0;
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ─── RESULT SCREEN ─── */
-.result-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-.outcome-banner {
-  border-radius: 10px; padding: 18px; border: 2px solid;
+/* Walk buttons */
+.walk-btns {
+  display: flex; gap: 8px; padding: 10px 12px;
+  background: var(--surface); border-top: 1px solid var(--border);
+  flex-shrink: 0;
 }
-.outcome-banner.victory { background: rgba(63,185,80,.08);  border-color: var(--safe); }
-.outcome-banner.defeat  { background: rgba(204,34,0,.08);   border-color: var(--accent); }
-.outcome-banner.partial { background: rgba(227,179,65,.08); border-color: var(--edge-col); }
-.outcome-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
-.outcome-sub   { font-size: 13px; color: var(--muted); }
-
-.analysis-box {
-  background: var(--raised); border-radius: 8px; padding: 14px;
+.btn {
+  flex: 1; padding: 12px;
+  border-radius: 8px; border: none;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  letter-spacing: .5px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
-.analysis-title { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
-.analysis-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; font-size: 12px; }
-.analysis-row:last-child { margin: 0; }
-.analysis-key { color: var(--muted); }
-.analysis-val { font-weight: 700; }
-.analysis-val.good { color: var(--safe); }
-.analysis-val.bad  { color: var(--accent); }
-.analysis-val.warn { color: var(--edge-col); }
+.btn-primary   { background: var(--signal); color: var(--bg); }
+.btn-secondary { background: var(--raised); color: var(--muted); border: 1px solid var(--border); }
+.btn-end       { background: rgba(63,185,80,.12); color: var(--safe); border: 1px solid rgba(63,185,80,.3); }
 
-.lesson-box {
+/* ─── INTERVENTION SCREEN ─── */
+.intervention-body {
+  padding: 16px; display: flex; flex-direction: column; gap: 14px;
+  flex: 1; overflow-y: auto;
+}
+.threat-box {
   background: rgba(227,179,65,.07);
-  border: 1px solid rgba(227,179,65,.25);
+  border: 1px solid rgba(227,179,65,.3);
   border-radius: 8px; padding: 14px;
-  font-size: 12px; line-height: 1.7;
 }
-.lesson-title {
-  font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
-  color: var(--edge-col); margin-bottom: 8px;
+.threat-label {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 1.2px;
+  color: var(--warn); font-weight: 700; margin-bottom: 8px;
 }
-.btn-return {
-  width: 100%; padding: 14px; border-radius: 8px; border: none;
-  background: var(--raised); color: var(--text);
-  border: 1px solid var(--border);
-  font-size: 14px; font-weight: 700; cursor: pointer;
+.threat-desc {
+  font-size: 12px; color: var(--text); line-height: 1.65;
 }
 
-/* Spread expansion flash */
-@keyframes tile-flash {
-  0%   { outline: 3px solid rgba(227,179,65,.9); }
-  100% { outline: 3px solid transparent; }
+.constraint-box {
+  background: rgba(247,129,102,.05);
+  border: 1px solid rgba(247,129,102,.25);
+  border-radius: 8px; padding: 12px;
 }
-.tile.just-infected { animation: tile-flash .6s ease-out forwards; }
+.constraint-label {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+  color: rgba(247,129,102,.65); margin-bottom: 5px;
+}
+.constraint-text {
+  font-size: 11px; color: var(--accent); line-height: 1.5;
+}
+
+.choice-btns { display: flex; flex-direction: column; gap: 8px; }
+.choice-btn {
+  width: 100%; padding: 14px 16px;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: var(--raised); color: var(--text);
+  cursor: pointer; text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color .15s, background .15s;
+  user-select: none;
+}
+.choice-btn:active { opacity: .85; }
+.choice-name {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; margin-bottom: 4px;
+}
+.choice-meta {
+  font-size: 10px; color: var(--muted); line-height: 1.4;
+}
+
+.choice-high .choice-name  { color: var(--accent); }
+.choice-high  { border-color: rgba(247,129,102,.35); }
+.choice-mid  .choice-name  { color: var(--warn); }
+.choice-mid   { border-color: rgba(227,179,65,.3); }
+.choice-safe .choice-name  { color: var(--muted); }
+
+/* ─── OUTCOME SCREEN ─── */
+.outcome-body {
+  padding: 16px; display: flex; flex-direction: column; gap: 14px;
+  flex: 1;
+}
+.outcome-banner {
+  border-radius: 10px; padding: 16px; border: 1px solid;
+  text-align: center;
+}
+.outcome-banner .outcome-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.outcome-banner .outcome-sub   { font-size: 11px; opacity: .8; }
+.outcome-success { background: rgba(63,185,80,.07);  border-color: rgba(63,185,80,.4);  color: var(--safe); }
+.outcome-partial { background: rgba(227,179,65,.07); border-color: rgba(227,179,65,.4); color: var(--warn); }
+.outcome-fail    { background: rgba(247,129,102,.07); border-color: rgba(247,129,102,.4); color: var(--accent); }
+
+.outcome-log {
+  background: var(--surface); border-radius: 8px; padding: 14px;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.olog-title {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--muted); margin-bottom: 3px;
+}
+.olog-line { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.olog-line.good { color: var(--safe); }
+.olog-line.warn { color: var(--warn); }
+.olog-line.bad  { color: var(--accent); }
+
+.btn-return {
+  width: 100%; padding: 14px; border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--raised); color: var(--text);
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  letter-spacing: .5px;
+}
+
+/* ─── SUMMARY SCREEN ─── */
+.summary-body {
+  padding: 16px; display: flex; flex-direction: column; gap: 16px;
+  flex: 1;
+}
+.summary-stats {
+  display: flex; gap: 6px;
+}
+.sstat {
+  flex: 1; background: var(--raised); border-radius: 8px; padding: 12px;
+  text-align: center;
+}
+.sstat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+.sstat-value { font-size: 20px; font-weight: 700; }
+
+.summary-lines {
+  background: var(--surface); border-radius: 8px; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.sum-line {
+  font-size: 12px; line-height: 1.65; color: var(--muted);
+  padding-left: 10px; border-left: 2px solid var(--border);
+}
+.sum-line b { color: var(--text); }
+.sum-line.yield-line  { border-left-color: var(--signal); }
+.sum-line.change-line { border-left-color: var(--warn); }
+.sum-line.note-line   { border-left-color: var(--muted); }
+
+.btn-new-walk {
+  width: 100%; padding: 16px; border-radius: 10px; border: none;
+  background: var(--signal); color: var(--bg);
+  font-size: 14px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
 </style>
 </head>
 <body>
 
-<!-- ══════════════ MAP ══════════════ -->
-<div id="screen-map" class="screen">
+<!-- ══════════════ CONFIG ══════════════ -->
+<div id="screen-config" class="screen">
   <div class="hdr">
     ⚡ 8GENTS
-    <span class="phase">MAP — RECON</span>
+    <span class="phase">PRE-WALK CONFIGURE</span>
+  </div>
+  <div class="config-sub">Configure your network posture before stepping out.</div>
+
+  <div class="config-body">
+
+    <!-- DOCTRINE -->
+    <div>
+      <div class="section-label">Doctrine</div>
+      <div class="doctrine-grid">
+        <div class="doctrine-card" data-d="salvage" onclick="selectDoctrine(this)">
+          <div class="doctrine-name">Salvage</div>
+          <div class="doctrine-desc">Recovers construction residue from stable, mapped territory.</div>
+        </div>
+        <div class="doctrine-card" data-d="harvest" onclick="selectDoctrine(this)">
+          <div class="doctrine-name">Signal Harvest</div>
+          <div class="doctrine-desc">Maximizes signal density along reliable, known corridors.</div>
+        </div>
+        <div class="doctrine-card" data-d="suppression" onclick="selectDoctrine(this)">
+          <div class="doctrine-name">Suppression</div>
+          <div class="doctrine-desc">Prepares active containment capability against anomalies.</div>
+        </div>
+        <div class="doctrine-card" data-d="recon" onclick="selectDoctrine(this)">
+          <div class="doctrine-name">Recon</div>
+          <div class="doctrine-desc">Extends into unmapped topology, generating discovery signatures.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MONITORING POSTURE -->
+    <div>
+      <div class="section-label">Monitoring Posture</div>
+      <div class="posture-row">
+        <button class="posture-btn" data-p="silent"   onclick="selectPosture(this)">Silent</button>
+        <button class="posture-btn" data-p="ambient"  onclick="selectPosture(this)">Ambient</button>
+        <button class="posture-btn" data-p="active"   onclick="selectPosture(this)">Active</button>
+        <button class="posture-btn" data-p="tactical" onclick="selectPosture(this)">Tactical</button>
+      </div>
+      <div class="posture-hint" id="postureHint">How often the companion speaks during your walk.</div>
+    </div>
+
+    <!-- WALK OBJECTIVE -->
+    <div>
+      <div class="section-label">Walk Objective</div>
+      <div class="objective-row">
+        <button class="obj-btn" data-o="familiar" onclick="selectObjective(this)">Familiar Territory</button>
+        <button class="obj-btn" data-o="new"      onclick="selectObjective(this)">New Territory</button>
+      </div>
+    </div>
+
+    <div class="deploy-wrap">
+      <button class="deploy-btn" id="deployBtn" onclick="startWalk()">▶ Deploy</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ WALK ══════════════ -->
+<div id="screen-walk" class="screen hidden">
+  <div class="hdr">
+    ⚡ 8GENTS
+    <span class="phase">WALK — ACTIVE</span>
   </div>
 
-  <div class="map-stats">
-    <div class="mstat">
-      <div class="mstat-label">Max Intensity</div>
-      <div class="mstat-value" id="statMax">30</div>
+  <div class="walk-stats">
+    <div class="wstat">
+      <div class="wstat-label">Signal</div>
+      <div class="wstat-value" id="wSignal" style="color:var(--signal)">0</div>
     </div>
-    <div class="mstat">
-      <div class="mstat-label">Edge Velocity</div>
-      <div class="mstat-value vel-moderate" id="statVel">MODERATE</div>
+    <div class="wstat">
+      <div class="wstat-label">Familiar</div>
+      <div class="wstat-value" id="wFamiliar" style="color:var(--familiar)">0</div>
     </div>
-    <div class="mstat">
-      <div class="mstat-label">At-Risk Tiles</div>
-      <div class="mstat-value" id="statRisk">0</div>
+    <div class="wstat">
+      <div class="wstat-label">New</div>
+      <div class="wstat-value" id="wNew" style="color:var(--new-col)">0</div>
     </div>
-    <div class="mstat">
-      <div class="mstat-label">Infected</div>
-      <div class="mstat-value" id="statInfected">1</div>
+    <div class="wstat">
+      <div class="wstat-label">Time</div>
+      <div class="wstat-value" id="wTime" style="color:var(--muted)">0:00</div>
     </div>
   </div>
 
-  <!-- SQUAD BAR — tap agents to toggle in/out of squad (max 3) -->
-  <div class="squad-bar">
-    <span class="squad-label">SQUAD</span>
-    <div class="agents-row" id="agentsRow">
-      <button class="agent-btn" data-agent="vex">⚡ VEX</button>
-      <button class="agent-btn" data-agent="thornwall">🛡 THORN</button>
-      <button class="agent-btn" data-agent="solin">✦ SOLIN</button>
-      <button class="agent-btn" data-agent="nyx">◈ NYX</button>
-      <button class="agent-btn" data-agent="kael">🔥 KAEL</button>
-    </div>
+  <div class="walk-context">
+    <span class="ctx-chip chip-doctrine" id="ctxDoctrine">—</span>
+    <span class="ctx-chip chip-posture"  id="ctxPosture">—</span>
+    <span class="ctx-chip chip-obj"      id="ctxObj">—</span>
   </div>
-  <div class="squad-hint" id="squadHint">Select up to 3 agents. Chain fires when ⚡ VEX + 🛡 THORN are both active.</div>
 
   <div class="grid-wrap">
-    <div class="grid" id="grid"></div>
+    <div class="grid" id="walkGrid"></div>
   </div>
 
-  <div class="legend">
-    <div class="leg"><div class="leg-dot" style="background:#1c2128;border:1px solid #30363d"></div>Clean</div>
-    <div class="leg"><div class="leg-dot" style="background:#1c2128;border:1px dashed rgba(227,179,65,.5)"></div>At-risk (next spread)</div>
-    <div class="leg"><div class="leg-dot" style="background:#4a1800"></div>Infected</div>
-    <div class="leg"><div class="leg-dot" style="background:#cc2200"></div>Critical</div>
-    <div class="leg"><div class="leg-dot" style="background:#aa2800;border:2px solid rgba(227,179,65,.7)"></div>Boundary — spreading edge</div>
+  <div class="territory-legend">
+    <div class="tleg"><div class="tleg-dot" style="background:#192d50"></div>New (1–2×)</div>
+    <div class="tleg"><div class="tleg-dot" style="background:#223520"></div>Familiar (5+×)</div>
+    <div class="tleg"><div class="tleg-dot" style="background:var(--signal);border-radius:50%"></div>You</div>
+    <div class="tleg"><div class="tleg-dot" style="background:var(--warn);border-radius:2px;animation:anomaly-pulse 1s infinite"></div>Anomaly</div>
   </div>
 
-  <div class="reading-guide">
-    <b>Watch the boundary (gold pulse)</b> — those tiles mark the advancing edge.<br>
-    <b>Gold-tinted clean tiles</b> will be claimed on the next spread tick.<br>
-    Tap any infected tile to intervene.
-  </div>
-</div>
+  <div class="companion-feed" id="companionFeed"></div>
 
-<!-- ══════════════ BRIEF ══════════════ -->
-<div id="screen-brief" class="screen hidden">
-  <div class="hdr">
-    ⚡ 8GENTS
-    <span class="phase">INTERVENTION BRIEF</span>
-  </div>
-  <div class="brief-body">
-    <div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Zone Classification</div>
-      <span class="zone-badge" id="briefZoneBadge">—</span>
-    </div>
-
-    <div class="brief-grid">
-      <div class="brief-stat">
-        <div class="brief-stat-label">Edge Velocity</div>
-        <div class="brief-stat-value" id="briefVel">—</div>
-      </div>
-      <div class="brief-stat">
-        <div class="brief-stat-label">Tile Intensity</div>
-        <div class="brief-stat-value" id="briefInt">—</div>
-      </div>
-      <div class="brief-stat">
-        <div class="brief-stat-label">Edge Nodes</div>
-        <div class="brief-stat-value" id="briefEdge">—</div>
-      </div>
-      <div class="brief-stat">
-        <div class="brief-stat-label">Center Nodes</div>
-        <div class="brief-stat-value" id="briefCenter">—</div>
-      </div>
-    </div>
-
-    <div class="warn-box" id="briefWarn">—</div>
-
-    <!-- LOADOUT ASSESSMENT -->
-    <div class="assessment-box">
-      <div class="assessment-header">◈ LOADOUT ASSESSMENT</div>
-      <div class="assessment-kv">
-        <span class="ak">Squad vs. this threat</span>
-        <span id="assessStrength" class="analysis-val">—</span>
-      </div>
-      <div id="assessStrengthDetail" class="assessment-detail pos">—</div>
-      <div id="assessWeaknessDetail" class="assessment-detail neg">—</div>
-      <div id="assessPrediction" class="assessment-prediction">—</div>
-    </div>
-
-    <div class="brief-btns">
-      <button class="btn btn-engage"  id="engageBtn">ENGAGE</button>
-      <button class="btn btn-retreat" id="retreatBtn">FALL BACK</button>
-    </div>
+  <div class="walk-btns">
+    <button class="btn btn-secondary" onclick="checkYield()">Check Yield</button>
+    <button class="btn btn-end" onclick="endWalk()">End Walk</button>
   </div>
 </div>
 
-<!-- ══════════════ COMBAT ══════════════ -->
-<div id="screen-combat" class="screen hidden">
+<!-- ══════════════ INTERVENTION ══════════════ -->
+<div id="screen-intervention" class="screen hidden">
   <div class="hdr">
     ⚡ 8GENTS
-    <span class="phase">COMBAT</span>
+    <span class="phase" style="color:var(--warn)">◈ INTERVENTION</span>
   </div>
-  <div class="combat-body">
+  <div class="intervention-body">
 
-    <div class="hp-wrap">
-      <div class="hp-label-row">
-        <span>Player Health</span>
-        <span id="hpText">10 / 10</span>
-      </div>
-      <div class="hp-bg">
-        <div class="hp-fill" id="hpFill" style="width:100%;background:var(--safe)"></div>
-      </div>
+    <div class="threat-box">
+      <div class="threat-label">▲ Anomaly Detected</div>
+      <div class="threat-desc" id="threatDesc">—</div>
     </div>
 
-    <div class="threshold-wrap">
-      <div class="threshold-label-row">
-        <span>▲ SPREAD THRESHOLD</span>
-        <span id="thresholdText">CONTAINED</span>
-      </div>
-      <div class="threshold-bg">
-        <div class="threshold-fill" id="thresholdFill" style="width:0%"></div>
-        <div class="threshold-ticks">
-          <div class="threshold-tick"></div>
-          <div class="threshold-tick"></div>
-          <div class="threshold-tick"></div>
-        </div>
-      </div>
+    <div class="constraint-box">
+      <div class="constraint-label">Loadout Constraint</div>
+      <div class="constraint-text" id="constraintText">—</div>
     </div>
 
-    <div class="combat-arena">
-      <div class="edge-zone">
-        <div class="zone-header">
-          <span class="zone-tag edge-tag">◆ EDGE NODES</span>
-          <span style="font-size:9px;color:var(--muted);">— survive each tick → spread advances</span>
-        </div>
-        <div class="nodes-row" id="edgeNodes"></div>
-      </div>
-      <div class="center-zone">
-        <div class="zone-header">
-          <span class="zone-tag ctr-tag">● CENTER NODES</span>
-          <span style="font-size:9px;color:var(--muted);">— high intensity, contained</span>
-        </div>
-        <div class="nodes-row" id="centerNodes"></div>
-      </div>
-    </div>
-
-    <div class="log-wrap">
-      <div class="log-title">Combat Log</div>
-      <div id="combatLog"></div>
-    </div>
+    <div class="choice-btns" id="choiceBtns"></div>
 
   </div>
 </div>
 
-<!-- ══════════════ RESULT ══════════════ -->
-<div id="screen-result" class="screen hidden">
+<!-- ══════════════ OUTCOME ══════════════ -->
+<div id="screen-outcome" class="screen hidden">
   <div class="hdr">
     ⚡ 8GENTS
-    <span class="phase">RESULT</span>
+    <span class="phase">OUTCOME</span>
   </div>
-  <div class="result-body">
+  <div class="outcome-body">
+
     <div class="outcome-banner" id="outcomeBanner">
       <div class="outcome-title" id="outcomeTitle">—</div>
-      <div class="outcome-sub"  id="outcomeSub">—</div>
+      <div class="outcome-sub"   id="outcomeSub">—</div>
     </div>
 
-    <div class="analysis-box">
-      <div class="analysis-title">What Happened</div>
-      <div class="analysis-row">
-        <span class="analysis-key">Edge nodes suppressed first</span>
-        <span class="analysis-val" id="aEdgeFirst">—</span>
+    <div class="outcome-log">
+      <div class="olog-title">Resolution Log</div>
+      <div id="outcomeLog"></div>
+    </div>
+
+    <button class="btn-return" onclick="returnToWalk()">Return to Walk</button>
+  </div>
+</div>
+
+<!-- ══════════════ SUMMARY ══════════════ -->
+<div id="screen-summary" class="screen hidden">
+  <div class="hdr">
+    ⚡ 8GENTS
+    <span class="phase">WALK COMPLETE</span>
+  </div>
+  <div class="summary-body">
+
+    <div class="summary-stats">
+      <div class="sstat">
+        <div class="sstat-label">Signal</div>
+        <div class="sstat-value" id="sumSignal" style="color:var(--signal)">—</div>
       </div>
-      <div class="analysis-row">
-        <span class="analysis-key">Threshold triggers</span>
-        <span class="analysis-val" id="aThreshTriggers">—</span>
+      <div class="sstat">
+        <div class="sstat-label">Familiar</div>
+        <div class="sstat-value" id="sumFamiliar" style="color:var(--familiar)">—</div>
       </div>
-      <div class="analysis-row">
-        <span class="analysis-key">Tiles newly infected</span>
-        <span class="analysis-val" id="aNewTiles">—</span>
-      </div>
-      <div class="analysis-row">
-        <span class="analysis-key">Map consequence</span>
-        <span class="analysis-val" id="aMapConseq">—</span>
-      </div>
-      <div class="analysis-row">
-        <span class="analysis-key">Chain fired</span>
-        <span class="analysis-val" id="aChainFired">—</span>
+      <div class="sstat">
+        <div class="sstat-label">New</div>
+        <div class="sstat-value" id="sumNew" style="color:var(--new-col)">—</div>
       </div>
     </div>
 
-    <div class="lesson-box" id="lessonBox">
-      <div class="lesson-title">◈ Reading</div>
-      <div id="lessonText">—</div>
-    </div>
+    <div class="summary-lines" id="summaryLines"></div>
 
-    <button class="btn-return" id="returnBtn">RETURN TO MAP</button>
+    <button class="btn-new-walk" onclick="resetToConfig()">Configure New Walk</button>
+
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════
-//  CONSTANTS
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  CONFIG STATE
+// ═══════════════════════════════════════════════════
+const cfg = { doctrine: null, posture: null, objective: null };
+
+const POSTURE_HINTS = {
+  silent:   'Silence is discipline. Only critical escalations will fire.',
+  ambient:  'Sparse observations. One advisory per corridor shift + escalation.',
+  active:   'Full operational cadence. Passive + advisory + escalation.',
+  tactical: 'Heightened awareness. Full cadence with enhanced intervention detail.',
+};
+
+function selectDoctrine(el) {
+  document.querySelectorAll('.doctrine-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  cfg.doctrine = el.dataset.d;
+  checkDeploy();
+}
+
+function selectPosture(el) {
+  document.querySelectorAll('.posture-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  cfg.posture = el.dataset.p;
+  document.getElementById('postureHint').textContent = POSTURE_HINTS[cfg.posture];
+  checkDeploy();
+}
+
+function selectObjective(el) {
+  document.querySelectorAll('.obj-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  cfg.objective = el.dataset.o;
+  checkDeploy();
+}
+
+function checkDeploy() {
+  const ready = cfg.doctrine && cfg.posture && cfg.objective;
+  document.getElementById('deployBtn').classList.toggle('ready', !!ready);
+}
+
+// ═══════════════════════════════════════════════════
+//  WALK STATE
+// ═══════════════════════════════════════════════════
 const G = 8;
-const MAX = 100;
-
-// ═══════════════════════════════════════════════════════
-//  GAME STATE
-// ═══════════════════════════════════════════════════════
-let grid        = [];
-let spreadTimer = null;
-let combat      = null;
-let thresholdTimer = null;
-let enemyDmgTimer  = null;
-let autoKillTimer  = null;
-let pendingTile = null;  // {x,y} tapped on map
-
-// Squad: which agents are deployed (max 3).
-// Default: synergy pair (Vex + Thornwall) + Solin.
-let squad = ['vex', 'thornwall', 'solin'];
-
-// ═══════════════════════════════════════════════════════
-//  SQUAD MANAGEMENT
-// ═══════════════════════════════════════════════════════
-function toggleAgent(agent) {
-  const idx = squad.indexOf(agent);
-  if (idx >= 0) {
-    squad.splice(idx, 1);
-  } else if (squad.length < 3) {
-    squad.push(agent);
-  }
-  renderSquadBar();
-}
-
-function renderSquadBar() {
-  const hasVex   = squad.includes('vex');
-  const hasThorn = squad.includes('thornwall');
-  const chainOn  = hasVex && hasThorn;
-
-  document.querySelectorAll('.agent-btn').forEach(btn => {
-    const agent   = btn.dataset.agent;
-    const active  = squad.includes(agent);
-    const isChain = chainOn && (agent === 'vex' || agent === 'thornwall');
-    btn.classList.toggle('active',       active && !isChain);
-    btn.classList.toggle('chain-active', isChain);
-  });
-
-  const hint = document.getElementById('squadHint');
-  if (chainOn) {
-    hint.innerHTML = '<span class="chain-ready">⚡ SHOCK→SHIELD RELAY CHAIN ACTIVE</span> — Vex + Thornwall synergy ready.';
-  } else if (squad.length === 0) {
-    hint.textContent = '⚠ No agents assigned — enemy HP ×3, taking ×3 damage per tick.';
-    hint.style.color = '#f78166';
-  } else {
-    const missing = !hasVex ? 'Add ⚡ VEX' : 'Add 🛡 THORN';
-    hint.textContent = 'Chain inactive. ' + missing + ' to enable SHOCK→SHIELD relay.';
-    hint.style.color = '';
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  LOADOUT MULTIPLIERS (Change 1)
-//  Synergy loadout = baseline. Every step down scales harder.
-// ═══════════════════════════════════════════════════════
-function getLoadoutMultipliers() {
-  const hasVex   = squad.includes('vex');
-  const hasThorn = squad.includes('thornwall');
-  const chainOn  = hasVex && hasThorn;
-  const size     = squad.length;
-
-  if (chainOn)        return { nodeHp: 1.0, dmgPerTick: 1, dmgInterval: 2200 };
-  if (size >= 2)      return { nodeHp: 1.7, dmgPerTick: 1, dmgInterval: 1700 };
-  if (size === 1)     return { nodeHp: 2.4, dmgPerTick: 2, dmgInterval: 1400 };
-  /* empty squad */   return { nodeHp: 3.2, dmgPerTick: 3, dmgInterval: 1100 };
-}
-
-// ═══════════════════════════════════════════════════════
-//  LOADOUT ASSESSMENT (Change 3)
-// ═══════════════════════════════════════════════════════
-function buildLoadoutAssessment(x, y) {
-  const maxVal   = Math.max(...grid.flat());
-  const hasVex   = squad.includes('vex');
-  const hasThorn = squad.includes('thornwall');
-  const chainOn  = hasVex && hasThorn;
-  const size     = squad.length;
-  const isEdge   = isBoundary(y, x);
-
-  const threatLevel = maxVal >= 80 ? 'high' : maxVal >= 50 ? 'medium' : 'low';
-
-  // Squad strength vs. this threat
-  let strengthText, strengthClass;
-  if (chainOn) {
-    strengthText  = 'Strong';
-    strengthClass = 'good';
-  } else if (size >= 2) {
-    strengthText  = 'Moderate';
-    strengthClass = 'warn';
-  } else if (size === 1) {
-    strengthText  = 'Weak';
-    strengthClass = 'bad';
-  } else {
-    strengthText  = 'Undefended';
-    strengthClass = 'bad';
-  }
-
-  // One specific strength
-  let strengthDetail, strengthDetailClass;
-  if (chainOn) {
-    strengthDetail      = 'Vex + Thornwall: SHOCK→SHIELD relay chain active';
-    strengthDetailClass = 'pos';
-  } else if (hasVex) {
-    strengthDetail      = 'Vex: arc spread available — no shield relay to amplify';
-    strengthDetailClass = 'pos';
-  } else if (hasThorn) {
-    strengthDetail      = 'Thornwall: shield relay ready — no arc source to route';
-    strengthDetailClass = 'pos';
-  } else if (size >= 1) {
-    const name = squad[0].charAt(0).toUpperCase() + squad[0].slice(1);
-    strengthDetail      = name + ': basic combat only — no chain mechanics';
-    strengthDetailClass = 'neutral';
-  } else {
-    strengthDetail      = 'No agents — direct engagement with no support';
-    strengthDetailClass = 'neutral';
-  }
-
-  // One specific weakness
-  let weaknessDetail;
-  if (size === 0) {
-    weaknessDetail = 'No squad — all enemy nodes at ×3 HP, taking ×3 damage per tick';
-  } else if (!chainOn && size === 1) {
-    weaknessDetail = 'Single agent — no burst damage, extended fight at high damage rate';
-  } else if (!chainOn) {
-    weaknessDetail = 'Chain incomplete — arc spread will not propagate to adjacent nodes';
-  } else if (isEdge && !squad.includes('nyx')) {
-    weaknessDetail = 'No Predator — boundary isolation pressure limited';
-  } else {
-    weaknessDetail = 'Full synergy loaded — no critical gaps detected';
-  }
-  const weaknessClass = (size === 0 || (!chainOn && size <= 1)) ? 'neg' : (chainOn ? 'pos' : 'neg');
-
-  // Predicted outcome
-  let prediction, predClass;
-  if (chainOn && threatLevel === 'low') {
-    prediction = 'Predicted: Decisive victory'; predClass = 'pred-good';
-  } else if (chainOn && threatLevel === 'medium') {
-    prediction = 'Predicted: Clean victory';    predClass = 'pred-good';
-  } else if (chainOn && threatLevel === 'high') {
-    prediction = 'Predicted: Narrow victory';   predClass = 'pred-warn';
-  } else if (size >= 2 && threatLevel !== 'high') {
-    prediction = 'Predicted: Hard-fought victory'; predClass = 'pred-warn';
-  } else if (size >= 2 && threatLevel === 'high') {
-    prediction = 'Predicted: High risk of defeat'; predClass = 'pred-bad';
-  } else if (size === 1) {
-    prediction = 'Predicted: Likely defeat — reinforce before engaging'; predClass = 'pred-bad';
-  } else {
-    prediction = 'Predicted: Catastrophic defeat'; predClass = 'pred-bad';
-  }
-
-  return { strengthText, strengthClass, strengthDetail, strengthDetailClass,
-           weaknessDetail, weaknessClass, prediction, predClass };
-}
-
-// ═══════════════════════════════════════════════════════
-//  MAP LOGIC
-// ═══════════════════════════════════════════════════════
-function initGrid() {
-  grid = Array.from({length:G}, () => Array(G).fill(0));
-  grid[3][3] = 30;
-}
-
-function isBoundary(y, x) {
-  if (!grid[y][x]) return false;
-  return (x>0 && !grid[y][x-1]) || (x<G-1 && !grid[y][x+1]) ||
-         (y>0 && !grid[y-1][x]) || (y<G-1 && !grid[y+1][x]);
-}
-
-function isAtRisk(y, x) {
-  if (grid[y][x]) return false;
-  return (x>0 && grid[y][x-1]) || (x<G-1 && grid[y][x+1]) ||
-         (y>0 && grid[y-1][x]) || (y<G-1 && grid[y+1][x]);
-}
-
-function spreadCluster() {
-  const maxVal = Math.max(...grid.flat());
-  const dist   = Math.max(1, Math.floor(maxVal / 35));
-  const next   = grid.map(r => [...r]);
-
-  for (let y=0; y<G; y++) for (let x=0; x<G; x++) {
-    if (!grid[y][x]) continue;
-    next[y][x] = Math.min(grid[y][x] + 11, MAX);
-    for (let dy=-(dist+1); dy<=dist+1; dy++) for (let dx=-(dist+1); dx<=dist+1; dx++) {
-      const ny=y+dy, nx=x+dx;
-      const d = Math.max(Math.abs(dy), Math.abs(dx));
-      if (ny>=0&&ny<G&&nx>=0&&nx<G&&d>0&&d<=dist+1&&!next[ny][nx])
-        next[ny][nx] = Math.max(5, 26 - d*7);
-    }
-  }
-  grid = next;
-  renderGrid();
-  updateMapStats();
-}
-
-function tileClass(v) {
-  if (v === 0) return '';
-  if (v < 30)  return 'low';
-  if (v < 55)  return 'mid';
-  if (v < 80)  return 'high';
-  return 'critical';
-}
-
-function renderGrid(newlyInfected=[]) {
-  const el = document.getElementById('grid');
-  el.innerHTML = '';
-  for (let y=0; y<G; y++) for (let x=0; x<G; x++) {
-    const v   = grid[y][x];
-    const div = document.createElement('div');
-    div.className = 'tile';
-
-    if (v === 0) {
-      div.classList.add(isAtRisk(y,x) ? 'at-risk' : 'clean');
-    } else {
-      div.classList.add(tileClass(v));
-      if (isBoundary(y,x)) div.classList.add('boundary');
-      div.classList.add('tappable');
-      div.textContent = Math.round(v);
-      div.addEventListener('click',     () => openBrief(x,y));
-      div.addEventListener('touchstart', e => { e.preventDefault(); openBrief(x,y); }, {passive:false});
-    }
-
-    if (newlyInfected.some(t=>t.x===x&&t.y===y)) div.classList.add('just-infected');
-    el.appendChild(div);
-  }
-}
-
-function updateMapStats() {
-  const flat   = grid.flat();
-  const maxVal = Math.max(...flat);
-  const infected = flat.filter(v=>v>0).length;
-  let risk = 0;
-  for (let y=0; y<G; y++) for (let x=0; x<G; x++) if (isAtRisk(y,x)) risk++;
-
-  document.getElementById('statMax').textContent      = Math.round(maxVal);
-  document.getElementById('statInfected').textContent = infected;
-  document.getElementById('statRisk').textContent     = risk;
-
-  const vel = document.getElementById('statVel');
-  if (maxVal >= 80) {
-    vel.textContent = 'CRITICAL'; vel.className = 'mstat-value vel-critical';
-  } else if (maxVal >= 50) {
-    vel.textContent = 'HIGH';     vel.className = 'mstat-value vel-high';
-  } else {
-    vel.textContent = 'MODERATE'; vel.className = 'mstat-value vel-moderate';
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  BRIEF
-// ═══════════════════════════════════════════════════════
-function openBrief(x, y) {
-  clearInterval(spreadTimer);
-  pendingTile = {x, y};
-
-  const v       = grid[y][x];
-  const maxVal  = Math.max(...grid.flat());
-  const isEdge  = isBoundary(y, x);
-  const velText = maxVal >= 80 ? 'CRITICAL' : maxVal >= 50 ? 'HIGH' : 'MODERATE';
-  const nodes   = buildNodes(x, y, isEdge);
-
-  // Zone badge
-  const badge = document.getElementById('briefZoneBadge');
-  badge.textContent = isEdge ? 'BOUNDARY — Expanding Edge' : 'INTERIOR — Contained Zone';
-  badge.className   = 'zone-badge ' + (isEdge ? 'zone-boundary' : 'zone-interior');
-
-  document.getElementById('briefVel').textContent    = velText;
-  document.getElementById('briefInt').textContent    = Math.round(v);
-  document.getElementById('briefEdge').textContent   = nodes.edge.length;
-  document.getElementById('briefCenter').textContent = nodes.center.length;
-
-  const warn = document.getElementById('briefWarn');
-  if (isEdge) {
-    warn.className = 'warn-box';
-    warn.innerHTML = `<b>◆ Edge node activity detected.</b><br>
-      Edge nodes will attempt to expand the spread during combat.<br>
-      Each tick they survive, the spread threshold advances.`;
-  } else {
-    warn.className = 'warn-box interior-warn';
-    warn.innerHTML = `<b>● Interior zone — edge nodes minimal.</b><br>
-      High-intensity center. Spread is locally contained.<br>
-      Threshold risk is low unless boundary tiles are also active.`;
-  }
-
-  // Populate Loadout Assessment (Change 3)
-  const assess = buildLoadoutAssessment(x, y);
-
-  const strengthEl = document.getElementById('assessStrength');
-  strengthEl.textContent = assess.strengthText;
-  strengthEl.className   = 'analysis-val ' + assess.strengthClass;
-
-  const sdEl = document.getElementById('assessStrengthDetail');
-  sdEl.textContent = assess.strengthDetail;
-  sdEl.className   = 'assessment-detail ' + assess.strengthDetailClass;
-
-  const wdEl = document.getElementById('assessWeaknessDetail');
-  wdEl.textContent = assess.weaknessDetail;
-  wdEl.className   = 'assessment-detail ' + assess.weaknessClass;
-
-  const predEl = document.getElementById('assessPrediction');
-  predEl.textContent = assess.prediction;
-  predEl.className   = 'assessment-prediction ' + assess.predClass;
-
-  showScreen('brief');
-}
-
-// ═══════════════════════════════════════════════════════
-//  COMBAT — NODE BUILDER (Change 1: scaled HP)
-// ═══════════════════════════════════════════════════════
-function buildNodes(x, y, isEdge) {
-  const v      = grid[y][x];
-  const maxVal = Math.max(...grid.flat());
-  const totalSpread   = grid.flat().reduce((a,b)=>a+b,0);
-  const globalPressure = totalSpread / (G*G*MAX);
-  const mult = getLoadoutMultipliers().nodeHp;
-
-  // Base HP values are tuned for the synergy loadout (mult=1.0).
-  // Under-prepared squads multiply these significantly.
-  const baseEdgeHp = Math.ceil(3 * mult);
-  const baseCtrHp  = Math.ceil(5 * mult);
-
-  if (isEdge) {
-    const edgeCount   = Math.min(5, Math.ceil(2 + (maxVal/MAX)*3));
-    const centerCount = Math.min(3, Math.ceil(1 + (v/MAX)*2));
-    return {
-      edge:   Array.from({length:edgeCount},   (_,i) => ({id:`e${i}`, hp:baseEdgeHp, maxHp:baseEdgeHp, type:'edge'})),
-      center: Array.from({length:centerCount}, (_,i) => ({id:`c${i}`, hp:baseCtrHp,  maxHp:baseCtrHp,  type:'center'})),
-    };
-  } else {
-    const edgeCount   = Math.min(2, Math.ceil(globalPressure*3));
-    const centerCount = Math.min(5, Math.ceil(2 + (v/MAX)*3));
-    const ctrHp       = Math.ceil(baseCtrHp * 1.2); // interior centers hit harder
-    return {
-      edge:   Array.from({length:edgeCount},   (_,i) => ({id:`e${i}`, hp:baseEdgeHp, maxHp:baseEdgeHp, type:'edge'})),
-      center: Array.from({length:centerCount}, (_,i) => ({id:`c${i}`, hp:ctrHp,      maxHp:ctrHp,      type:'center'})),
-    };
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  COMBAT — START (Changes 1 + 2)
-// ═══════════════════════════════════════════════════════
-function startCombat() {
-  const {x, y}   = pendingTile;
-  const isEdge   = isBoundary(y, x);
-  const nodes    = buildNodes(x, y, isEdge);
-  const mults    = getLoadoutMultipliers();
-  const maxHp    = 10;
-  const hasChain = squad.includes('vex') && squad.includes('thornwall');
-
-  combat = {
-    x, y, isEdge,
-    nodes: [...nodes.edge, ...nodes.center],
-    hp: maxHp, maxHp,
-    threshold: 0,
-    thresholdTriggers: 0,
-    newlyInfected: [],
-    edgeSuppressedFirst: null,
-    chainFired: false,
-    active: true,
-    log: [],
-  };
-
-  clearLog();
-
-  // Squad status line — player sees immediately why combat feels hard/easy
-  if (squad.length === 0) {
-    addLog('⚠ NO SQUAD — maximum pressure, all node HP ×3', 'bad');
-  } else if (hasChain) {
-    addLog('Squad: SHOCK-RELAY ACTIVE — Vex/Thornwall chain ready', 'chain');
-  } else if (squad.length >= 2) {
-    const names = squad.map(a => a.charAt(0).toUpperCase() + a.slice(1)).join(', ');
-    addLog('Squad: ' + names + ' — partial formation, no chain', 'warn');
-  } else {
-    const name = squad[0].charAt(0).toUpperCase() + squad[0].slice(1);
-    addLog('Squad: ' + name + ' only — single agent, high exposure', 'bad');
-  }
-  addLog('Combat initiated — ' + (isEdge ? 'BOUNDARY zone' : 'INTERIOR zone'), '');
-  addLog('Edge: ' + nodes.edge.length + ' nodes (HP ' + (nodes.edge[0]?.hp||'—') + ')  '
-       + 'Center: ' + nodes.center.length + ' nodes (HP ' + (nodes.center[0]?.hp||'—') + ')', '');
-
-  renderNodes();
-  updateHp();
-  updateThreshold();
-  showScreen('combat');
-
-  // Spread threshold ticks — faster interval when squad is weak
-  const spreadTickMs = hasChain ? 5000 : (squad.length >= 2 ? 4200 : 3500);
-  thresholdTimer = setInterval(() => {
-    if (!combat.active) return;
-    const aliveEdge = combat.nodes.filter(n=>n.type==='edge'&&n.hp>0).length;
-    if (aliveEdge === 0) return;
-
-    combat.threshold = Math.min(100, combat.threshold + 34);
-    combat.thresholdTriggers++;
-    updateThreshold();
-
-    const newTile = infectNearby(x, y);
-    if (newTile) {
-      combat.newlyInfected.push(newTile);
-      addLog('⚠ Edge spread: tile ('+newTile.x+','+newTile.y+') infected', 'warn');
-      renderGrid(combat.newlyInfected);
-    }
-
-    if (combat.threshold >= 100) {
-      addLog('▲ THRESHOLD CROSSED — edge nodes reinforced', 'warn');
-      combat.nodes.filter(n=>n.type==='edge'&&n.hp>0).forEach(n=>{ n.hp++; n.maxHp++; });
-      renderNodes();
-    }
-  }, spreadTickMs);
-
-  // Enemies auto-damage player — rate scales with loadout weakness (Change 1)
-  enemyDmgTimer = setInterval(() => {
-    if (!combat.active) return;
-    const alive = combat.nodes.filter(n=>n.hp>0).length;
-    if (!alive) return;
-    combat.hp = Math.max(0, combat.hp - mults.dmgPerTick);
-    updateHp();
-    if (combat.hp <= 0) endCombat('defeat-hp');
-  }, mults.dmgInterval);
-
-  // Auto-attack whittles center nodes — intentionally slow so player must tap
-  autoKillTimer = setInterval(() => {
-    if (!combat.active) return;
-    const centerAlive = combat.nodes.filter(n=>n.type==='center'&&n.hp>0);
-    if (!centerAlive.length) return;
-    const t = centerAlive[Math.floor(Math.random()*centerAlive.length)];
-    t.hp = Math.max(0, t.hp-1);
-    if (t.hp===0) addLog('Auto: center node neutralized', '');
-    renderNodes();
-    checkWin();
-  }, 2800);
-
-  // Chain event setup (Change 2)
-  if (hasChain) {
-    // Brief signal that the chain is priming
-    setTimeout(() => {
-      if (combat && combat.active)
-        addLog('Vex: SHOCK array primed — Thornwall shield field detected', 'chain');
-    }, 1800);
-    // Fire the full chain sequence
-    setTimeout(() => {
-      if (combat && combat.active) fireChainEvent();
-    }, 4200);
-  } else {
-    // Explicitly log why chain is absent — absence must also be readable
-    setTimeout(() => {
-      if (!combat || !combat.active) return;
-      if (!squad.includes('vex') && !squad.includes('thornwall')) {
-        addLog('— No arc source, no relay — chain spread unavailable', '');
-      } else if (!squad.includes('vex')) {
-        addLog('— No Conduit (Vex) — arc spread cannot initiate', '');
-      } else {
-        addLog('— No shield relay (Thornwall) — arc cannot propagate', '');
-      }
-    }, 2000);
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  CHAIN EVENT (Change 2)
-//  Vex SHOCK → Thornwall SHIELD relay → arc spread
-// ═══════════════════════════════════════════════════════
-function fireChainEvent() {
-  if (!combat || !combat.active || combat.chainFired) return;
-  const aliveEdge = combat.nodes.filter(n => n.type === 'edge' && n.hp > 0);
-  if (aliveEdge.length === 0) {
-    combat.chainFired = true;
-    return; // no targets — edge already cleared, no need to dramatize
-  }
-
-  combat.chainFired = true;
-
-  // Pre-pause
-  addLog('', 'chain-pause');
-
-  setTimeout(() => {
-    if (!combat) return;
-    addLog('⚡⚡ CHAIN: SHOCK → SHIELD RELAY → ARC SPREAD ⚡⚡', 'chain-hdr');
-
-    setTimeout(() => {
-      addLog('Vex: SHOCK applied to primary target', 'chain');
-
-      setTimeout(() => {
-        addLog('Thornwall: shield field conducting... relay ACTIVATED', 'chain');
-
-        setTimeout(() => {
-          if (!combat || !combat.active) return;
-          const targets = combat.nodes.filter(n => n.type === 'edge' && n.hp > 0).slice(0, 2);
-
-          if (targets.length === 0) {
-            addLog('⚡→ Arc released — no edge nodes remaining', 'chain-arc');
-          } else {
-            targets.forEach(n => {
-              const dmg = Math.min(n.hp, 2);
-              n.hp -= dmg;
-              if (n.hp <= 0) {
-                addLog('⚡→ Arc jump: EDGE NODE COLLAPSED', 'chain-arc');
-              } else {
-                addLog('⚡→ Arc jump: edge node −' + dmg + ' HP (' + n.hp + ' remaining)', 'chain-arc');
-              }
-            });
-            renderNodes();
-            checkWin();
-          }
-
-          // Post-pause
-          setTimeout(() => { addLog('', 'chain-pause'); }, 250);
-
-        }, 550);
-      }, 500);
-    }, 380);
-  }, 200);
-}
-
-// ═══════════════════════════════════════════════════════
-//  COMBAT — INPUT + RESOLUTION
-// ═══════════════════════════════════════════════════════
-function tapNode(id) {
-  if (!combat || !combat.active) return;
-  const node = combat.nodes.find(n=>n.id===id);
-  if (!node || node.hp<=0) return;
-
-  if (node.type === 'edge' && combat.edgeSuppressedFirst === null) {
-    combat.edgeSuppressedFirst = true;
-  } else if (node.type === 'center' && combat.edgeSuppressedFirst === null) {
-    combat.edgeSuppressedFirst = false;
-  }
-
-  node.hp = Math.max(0, node.hp-1);
-  if (node.hp===0) {
-    const label = node.type==='edge' ? '◆ Edge node suppressed' : '● Center node defeated';
-    addLog(label, node.type==='edge'?'good':'');
-  }
-  renderNodes();
-  checkWin();
-}
-
-function checkWin() {
-  if (!combat) return;
-  const alive = combat.nodes.filter(n=>n.hp>0).length;
-  if (alive === 0) endCombat('victory');
-}
-
-function endCombat(reason) {
-  if (!combat || !combat.active) return;
-  combat.active = false;
-  clearInterval(thresholdTimer);
-  clearInterval(enemyDmgTimer);
-  clearInterval(autoKillTimer);
-
-  const {x, y} = combat;
-  const won     = reason === 'victory';
-  const partial = won && combat.thresholdTriggers > 0;
-
-  for (let dy=-2; dy<=2; dy++) for (let dx=-2; dx<=2; dx++) {
-    const ny=y+dy, nx=x+dx;
-    if (ny<0||ny>=G||nx<0||nx>=G) continue;
-    if (won) {
-      grid[ny][nx] = Math.max(0, Math.round(grid[ny][nx] * (partial ? 0.65 : 0.45)));
-    } else {
-      if (grid[ny][nx]>0) grid[ny][nx] = Math.min(MAX, Math.round(grid[ny][nx]*1.5));
-      else if (Math.abs(dy)<=1&&Math.abs(dx)<=1) grid[ny][nx] = 18;
-    }
-  }
-
-  buildResult(reason, won, partial);
-  showScreen('result');
-}
-
-function buildResult(reason, won, partial) {
-  const banner = document.getElementById('outcomeBanner');
-  const title  = document.getElementById('outcomeTitle');
-  const sub    = document.getElementById('outcomeSub');
-
-  if (won && !partial) {
-    banner.className  = 'outcome-banner victory';
-    title.textContent = '✓ FULL CONTAINMENT';
-    sub.textContent   = 'Edge suppressed before threshold. Spread reduced 55% in zone.';
-  } else if (won && partial) {
-    banner.className  = 'outcome-banner partial';
-    title.textContent = '△ PARTIAL VICTORY';
-    sub.textContent   = 'Enemy defeated, but spread advanced during combat. Zone reduced 35%.';
-  } else {
-    banner.className  = 'outcome-banner defeat';
-    title.textContent = '✕ DEFEAT';
-    sub.textContent   = 'Combat lost. Spread accelerated — 50% intensity increase in zone.';
-  }
-
-  const edgeFirst = combat.edgeSuppressedFirst;
-  document.getElementById('aEdgeFirst').textContent =
-    edgeFirst === true ? 'YES' : edgeFirst === false ? 'NO' : 'N/A';
-  document.getElementById('aEdgeFirst').className =
-    edgeFirst === true ? 'analysis-val good' :
-    edgeFirst === false ? 'analysis-val bad' : 'analysis-val';
-
-  const trig = combat.thresholdTriggers;
-  document.getElementById('aThreshTriggers').textContent = trig + ' / 3';
-  document.getElementById('aThreshTriggers').className   =
-    trig===0 ? 'analysis-val good' : trig<3 ? 'analysis-val warn' : 'analysis-val bad';
-
-  const ni = combat.newlyInfected.length;
-  document.getElementById('aNewTiles').textContent = ni === 0 ? 'None' : '+' + ni + ' tiles';
-  document.getElementById('aNewTiles').className   = ni===0 ? 'analysis-val good' : 'analysis-val bad';
-
-  const conseq = won && !partial ? 'Spread –55%' : won ? 'Spread –35%, edge grew' : 'Spread +50%';
-  document.getElementById('aMapConseq').textContent = conseq;
-  document.getElementById('aMapConseq').className   =
-    won && !partial ? 'analysis-val good' : won ? 'analysis-val warn' : 'analysis-val bad';
-
-  // Chain fired result row
-  const chainEl = document.getElementById('aChainFired');
-  if (squad.includes('vex') && squad.includes('thornwall')) {
-    chainEl.textContent = combat.chainFired ? 'YES — arc spread' : 'Primed (nodes gone)';
-    chainEl.className   = combat.chainFired ? 'analysis-val good' : 'analysis-val warn';
-  } else {
-    chainEl.textContent = 'N/A — chain not equipped';
-    chainEl.className   = 'analysis-val';
-  }
-
-  // Lesson box
-  const lesson = document.getElementById('lessonText');
-  if (won && !partial && edgeFirst) {
-    lesson.innerHTML = `You suppressed edge nodes before attacking the center — the correct read.<br><br>
-      The boundary was expanding. Targeting it first collapsed the perimeter before it could cross threshold.<br><br>
-      <b>Pattern confirmed: fight the future state, not the current one.</b>`;
-  } else if (won && partial && !edgeFirst) {
-    lesson.innerHTML = `You won, but the spread advanced ${ni} tile(s) during combat.<br><br>
-      You targeted center nodes while edge nodes were still active. Each threshold tick they survived expanded the map.<br><br>
-      <b>Next time: suppress edge nodes (◆) first — they're the spread mechanism, not the damage source.</b>`;
-  } else if (won && partial && edgeFirst) {
-    lesson.innerHTML = `Good instinct targeting edge nodes — but the threshold still triggered ${trig} time(s).<br><br>
-      Edge nodes were suppressed, but too slowly. Try targeting them faster before the tick.<br><br>
-      <b>Speed of edge suppression matters — each tick they survive, the map expands.</b>`;
-  } else if (!won && edgeFirst === false) {
-    lesson.innerHTML = `You fought the center while the edge was still expanding.<br><br>
-      Each threshold tick with live edge nodes infected a new tile and reinforced those nodes.<br><br>
-      <b>Suppress ◆ edge nodes first — the center isn't going anywhere.</b>`;
-  } else {
-    lesson.innerHTML = `The spread crossed threshold ${trig} time(s), reinforcing edge nodes and expanding the map.<br><br>
-      The danger isn't intensity — it's velocity. The edges were moving while you were fighting.<br><br>
-      <b>Watch the boundary pulse. Suppress edge nodes first. Then take the center.</b>`;
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════════════════
-function infectNearby(cx, cy) {
-  const candidates = [];
-  for (let dy=-3; dy<=3; dy++) for (let dx=-3; dx<=3; dx++) {
-    const ny=cy+dy, nx=cx+dx;
-    if (ny>=0&&ny<G&&nx>=0&&nx<G&&grid[ny][nx]===0&&isAtRisk(ny,nx))
-      candidates.push({x:nx, y:ny});
-  }
-  if (!candidates.length) return null;
-  const t = candidates[Math.floor(Math.random()*candidates.length)];
-  grid[t.y][t.x] = 15;
-  return t;
-}
-
-function renderNodes() {
-  const edgeEl = document.getElementById('edgeNodes');
-  const ctrEl  = document.getElementById('centerNodes');
-  edgeEl.innerHTML = '';
-  ctrEl.innerHTML  = '';
-
-  const edgeNodes   = combat.nodes.filter(n=>n.type==='edge');
-  const centerNodes = combat.nodes.filter(n=>n.type==='center');
-
-  if (edgeNodes.length === 0) {
-    edgeEl.innerHTML = '<div class="zone-empty">◆ Edge suppressed — spread contained</div>';
-  } else {
-    edgeNodes.forEach(n => {
-      const btn = document.createElement('div');
-      btn.className = 'node-btn node-edge' + (n.hp<=0?' dead':'');
-      btn.textContent = n.hp > 0 ? n.hp : '✓';
-      if (n.hp > 0) {
-        btn.addEventListener('click', () => tapNode(n.id));
-        btn.addEventListener('touchstart', e=>{e.preventDefault();tapNode(n.id);},{passive:false});
-      }
-      edgeEl.appendChild(btn);
-    });
-  }
-
-  if (centerNodes.length === 0) {
-    ctrEl.innerHTML = '<div class="zone-empty">● Center cleared — combat complete</div>';
-  } else {
-    centerNodes.forEach(n => {
-      const btn = document.createElement('div');
-      btn.className = 'node-btn node-center' + (n.hp<=0?' dead':'');
-      btn.textContent = n.hp > 0 ? n.hp : '✓';
-      if (n.hp > 0) {
-        btn.addEventListener('click', () => tapNode(n.id));
-        btn.addEventListener('touchstart', e=>{e.preventDefault();tapNode(n.id);},{passive:false});
-      }
-      ctrEl.appendChild(btn);
-    });
-  }
-}
-
-function updateHp() {
-  const pct  = (combat.hp / combat.maxHp) * 100;
-  const fill = document.getElementById('hpFill');
-  fill.style.width      = pct + '%';
-  fill.style.background = pct>50 ? 'var(--safe)' : pct>25 ? '#e3b341' : 'var(--accent)';
-  document.getElementById('hpText').textContent = combat.hp + ' / ' + combat.maxHp;
-}
-
-function updateThreshold() {
-  const pct   = combat.threshold;
-  document.getElementById('thresholdFill').style.width = pct + '%';
-  const label = pct === 0  ? 'CONTAINED' :
-                pct < 67   ? 'ADVANCING' :
-                pct < 100  ? 'CRITICAL'  : 'BREACHED';
-  document.getElementById('thresholdText').textContent = label;
-}
-
-function addLog(msg, type='') {
-  const box = document.getElementById('combatLog');
-  const el  = document.createElement('div');
-  el.className = 'log-line' + (type ? ' ' + type : '');
-  if (type === 'chain-pause') {
-    el.textContent = '';
-  } else {
-    el.textContent = type === 'chain-hdr' ? msg : '· ' + msg;
-  }
-  box.appendChild(el);
-  box.parentElement.scrollTop = box.parentElement.scrollHeight;
-}
-
-function clearLog() {
-  document.getElementById('combatLog').innerHTML = '';
-}
-
-// ═══════════════════════════════════════════════════════
+let tileCounts = [];
+let playerRow = 3, playerCol = 3;
+
+const walk = {
+  active:      false,
+  startTime:   null,
+  signal:      0,
+  familiar:    new Set(),   // "r,c" keys of tiles visited 5+
+  newTiles:    new Set(),   // "r,c" keys of tiles visited 1-2
+  interventionFired:  false,
+  interventionChoice: null,
+  anomalyRow:  -1,
+  anomalyCol:  -1,
+  mapEffect:   null,
+};
+
+// Timers
+let moveTimer, clockTimer, passiveTimer, advisoryTimer, escalationTimer;
+
+// ═══════════════════════════════════════════════════
+//  COMPANION LINES
+// ═══════════════════════════════════════════════════
+const PASSIVE = {
+  salvage:     [
+    'Residue layer consolidating. Salvage yield building.',
+    'Infrastructure signatures stable along this corridor.',
+    'Recovery efficiency nominal. Terrain mapping in progress.',
+  ],
+  harvest:     [
+    'Signal density increasing. Harvest accumulating.',
+    'This route is becoming structurally reliable.',
+    'Network depth activating. Yield layer thickening.',
+  ],
+  suppression: [
+    'Territory pressure holding. Suppression posture maintaining containment.',
+    'No escalation signatures. Corridor clear.',
+    'Perimeter integrity stable. Continue current heading.',
+  ],
+  recon:       [
+    'Network topology updating. Discovery margin generating.',
+    'New signatures catalogued. Coverage expanding.',
+    'Recon sweep active. Territory profile building.',
+  ],
+};
+
+const ADVISORY = {
+  salvage_new:        'Volatile topology detected. Salvage doctrine optimizes for stable ground — yield may fragment here.',
+  salvage_familiar:   'Familiar corridor active. Salvage efficiency high — infrastructure consolidating.',
+  harvest_new:        'Unfamiliar signal structure. Harvest efficiency reduced — topology unmapped.',
+  harvest_familiar:   'Deep signal layer activated. Familiar route amplifying harvest yield.',
+  suppression_new:    'Unmapped pressure topology. Suppression doctrine well-suited for unknown territory.',
+  suppression_familiar:'Familiar zone, low pressure. Suppression capability over-prepared here.',
+  recon_new:          'New topology generating discovery signatures. Recon doctrine fully engaged.',
+  recon_familiar:     'Known territory limits discovery yield. Recon doctrine underutilized here.',
+};
+
+const ESCALATION = [
+  'Containment failure imminent. Anomaly forming nearby.',
+  'Unstable cluster detected. Intervention window open.',
+];
+
+// ═══════════════════════════════════════════════════
 //  SCREEN ROUTING
-// ═══════════════════════════════════════════════════════
-function showScreen(name) {
-  ['map','brief','combat','result'].forEach(s => {
-    document.getElementById('screen-'+s).classList.toggle('hidden', s!==name);
-  });
+// ═══════════════════════════════════════════════════
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
 }
 
-// ═══════════════════════════════════════════════════════
-//  BUTTON WIRING
-// ═══════════════════════════════════════════════════════
-document.getElementById('engageBtn').addEventListener('click', startCombat);
+// ═══════════════════════════════════════════════════
+//  START WALK
+// ═══════════════════════════════════════════════════
+function startWalk() {
+  if (!cfg.doctrine || !cfg.posture || !cfg.objective) return;
 
-document.getElementById('retreatBtn').addEventListener('click', () => {
-  showScreen('map');
-  spreadTimer = setInterval(spreadCluster, 2000);
-});
+  // Reset tile grid
+  tileCounts = Array.from({ length: G }, () => new Array(G).fill(0));
+  playerRow = 3; playerCol = 3;
 
-document.getElementById('returnBtn').addEventListener('click', () => {
-  renderGrid();
-  updateMapStats();
-  showScreen('map');
-  spreadTimer = setInterval(spreadCluster, 2000);
-});
+  // Reset walk state
+  walk.active = true;
+  walk.startTime = Date.now();
+  walk.signal = 0;
+  walk.familiar.clear();
+  walk.newTiles.clear();
+  walk.interventionFired = false;
+  walk.interventionChoice = null;
+  walk.anomalyRow = -1;
+  walk.anomalyCol = -1;
+  walk.mapEffect = null;
 
-// Squad agent toggle buttons
-document.querySelectorAll('.agent-btn').forEach(btn => {
-  btn.addEventListener('click', () => toggleAgent(btn.dataset.agent));
-  btn.addEventListener('touchstart', e => { e.preventDefault(); toggleAgent(btn.dataset.agent); }, {passive:false});
-});
+  // Context chips
+  const DOCTRINE_LABELS = { salvage:'Salvage', harvest:'Signal Harvest', suppression:'Suppression', recon:'Recon' };
+  const POSTURE_LABELS  = { silent:'Silent', ambient:'Ambient', active:'Active', tactical:'Tactical' };
+  document.getElementById('ctxDoctrine').textContent = DOCTRINE_LABELS[cfg.doctrine];
+  document.getElementById('ctxPosture').textContent  = POSTURE_LABELS[cfg.posture];
+  document.getElementById('ctxObj').textContent      = cfg.objective === 'familiar' ? 'Familiar' : 'New Territory';
 
-// ═══════════════════════════════════════════════════════
-//  BOOT
-// ═══════════════════════════════════════════════════════
-initGrid();
-renderGrid();
-updateMapStats();
-renderSquadBar();  // Apply default squad visual state
-spreadTimer = setInterval(spreadCluster, 2000);
+  // Build grid DOM
+  const grid = document.getElementById('walkGrid');
+  grid.innerHTML = '';
+  for (let r = 0; r < G; r++) {
+    for (let c = 0; c < G; c++) {
+      const div = document.createElement('div');
+      div.className = 'tile tile-unvisited';
+      div.id = `t${r}${c}`;
+      grid.appendChild(div);
+    }
+  }
+
+  // Visit starting tile
+  visitTile(playerRow, playerCol);
+  markPlayer();
+
+  show('screen-walk');
+  updateStats();
+
+  // Timers
+  // NOTE: these are prototype-compressed timings. Real game would use real GPS cadence.
+  moveTimer  = setInterval(movePlayer, 2200);
+  clockTimer = setInterval(tickClock, 1000);
+  scheduleCompanion();
+}
+
+// ═══════════════════════════════════════════════════
+//  TILE MANAGEMENT
+// ═══════════════════════════════════════════════════
+function visitTile(r, c) {
+  tileCounts[r][c]++;
+  const count = tileCounts[r][c];
+  const key   = `${r},${c}`;
+
+  if (count >= 5) {
+    walk.familiar.add(key);
+    walk.newTiles.delete(key);
+  } else if (count <= 2 && !walk.familiar.has(key)) {
+    walk.newTiles.add(key);
+  }
+
+  // Signal yield: familiar tiles produce more concentrated yield
+  walk.signal += count >= 5 ? 3 : count >= 3 ? 2 : 1;
+  renderTile(r, c);
+}
+
+function renderTile(r, c) {
+  const el = document.getElementById(`t${r}${c}`);
+  if (!el) return;
+  const count = tileCounts[r][c];
+  const isPlayer  = (r === playerRow && c === playerCol);
+  const isAnomaly = (r === walk.anomalyRow && c === walk.anomalyCol);
+
+  el.className = 'tile';
+  if      (isAnomaly)     el.classList.add('tile-anomaly');
+  else if (count === 0)   el.classList.add('tile-unvisited');
+  else if (count === 1)   el.classList.add('tile-new1');
+  else if (count === 2)   el.classList.add('tile-new2');
+  else if (count <= 4)    el.classList.add('tile-building');
+  else if (count <= 7)    el.classList.add('tile-familiar');
+  else if (count <= 12)   el.classList.add('tile-deep');
+  else                    el.classList.add('tile-entrenched');
+
+  if (isPlayer) el.classList.add('tile-player');
+}
+
+function markPlayer() {
+  document.querySelectorAll('.tile-player').forEach(t => {
+    t.classList.remove('tile-player');
+  });
+  const el = document.getElementById(`t${playerRow}${playerCol}`);
+  if (el) el.classList.add('tile-player');
+}
+
+function updateStats() {
+  document.getElementById('wSignal').textContent   = walk.signal;
+  document.getElementById('wFamiliar').textContent = walk.familiar.size;
+  document.getElementById('wNew').textContent      = walk.newTiles.size;
+}
+
+function tickClock() {
+  if (!walk.startTime) return;
+  const s = Math.floor((Date.now() - walk.startTime) / 1000);
+  const m = Math.floor(s / 60);
+  document.getElementById('wTime').textContent = `${m}:${String(s % 60).padStart(2, '0')}`;
+}
+
+// ═══════════════════════════════════════════════════
+//  PLAYER MOVEMENT
+// ═══════════════════════════════════════════════════
+function movePlayer() {
+  if (!walk.active) return;
+
+  const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+  const candidates = dirs
+    .map(([dr,dc]) => ({ r: playerRow+dr, c: playerCol+dc }))
+    .filter(({ r,c }) => r >= 0 && r < G && c >= 0 && c < G)
+    .map(({ r,c }) => ({ r, c, count: tileCounts[r][c] }));
+
+  let chosen;
+  if (cfg.objective === 'new') {
+    const unvisited = candidates.filter(t => t.count === 0);
+    const sparse    = candidates.filter(t => t.count < 3);
+    if (unvisited.length && Math.random() < .75) chosen = pick(unvisited);
+    else if (sparse.length && Math.random() < .6) chosen = pick(sparse);
+    else chosen = pick(candidates);
+  } else {
+    const familiar = candidates.filter(t => t.count >= 5);
+    const visited  = candidates.filter(t => t.count >= 1);
+    if (familiar.length && Math.random() < .65) chosen = pick(familiar);
+    else if (visited.length && Math.random() < .6) chosen = pick(visited);
+    else chosen = pick(candidates);
+  }
+
+  playerRow = chosen.r;
+  playerCol = chosen.c;
+  visitTile(chosen.r, chosen.c);
+  markPlayer();
+  updateStats();
+}
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// ═══════════════════════════════════════════════════
+//  COMPANION SYSTEM
+// ═══════════════════════════════════════════════════
+function scheduleCompanion() {
+  const p = cfg.posture;
+
+  if (p === 'active' || p === 'tactical') {
+    // First passive fires early so the player hears the companion right away
+    setTimeout(firePassive, 8000);
+    passiveTimer  = setInterval(firePassive,  18000);
+    setTimeout(fireAdvisory, 38000);
+    advisoryTimer = setInterval(fireAdvisory, 55000);
+  } else if (p === 'ambient') {
+    setTimeout(fireAdvisory, 35000);
+    advisoryTimer = setInterval(fireAdvisory, 75000);
+  }
+  // Silent: no passives or advisories until escalation
+
+  // Escalation fires once at ~90s (prototype timing; real game would be event-driven)
+  escalationTimer = setTimeout(fireEscalation, 90000);
+}
+
+function firePassive() {
+  if (!walk.active) return;
+  const lines = PASSIVE[cfg.doctrine] || PASSIVE.harvest;
+  addLine(lines[Math.floor(Math.random() * lines.length)], 'passive');
+}
+
+function fireAdvisory() {
+  if (!walk.active) return;
+  const zone = walk.newTiles.size > walk.familiar.size ? 'new' : 'familiar';
+  const key  = `${cfg.doctrine}_${zone}`;
+  addLine(ADVISORY[key] || ADVISORY.harvest_familiar, 'advisory');
+}
+
+function fireEscalation() {
+  if (!walk.active || walk.interventionFired) return;
+  walk.interventionFired = true;
+
+  addLine(ESCALATION[Math.floor(Math.random() * ESCALATION.length)], 'escalation');
+
+  // Place anomaly 2 cells from player
+  const aRow = Math.min(G-1, Math.max(0, playerRow + (Math.random() < .5 ? 2 : -2)));
+  const aCol = Math.min(G-1, Math.max(0, playerCol + (Math.random() < .5 ? 1 : -1)));
+  walk.anomalyRow = aRow;
+  walk.anomalyCol = aCol;
+
+  const anomTile = document.getElementById(`t${aRow}${aCol}`);
+  if (anomTile) {
+    anomTile.className = 'tile tile-anomaly';
+  }
+
+  // Pause movement and open intervention after a brief beat
+  clearInterval(moveTimer);
+  walk.active = false;
+  setTimeout(openIntervention, 2800);
+}
+
+function addLine(text, type) {
+  const feed = document.getElementById('companionFeed');
+  while (feed.children.length >= 3) feed.removeChild(feed.firstChild);
+
+  const div = document.createElement('div');
+  div.className = `companion-line ${type === 'advisory' ? 'advisory' : type === 'escalation' ? 'escalation' : ''}`;
+  div.textContent = text;
+  feed.appendChild(div);
+}
+
+// ═══════════════════════════════════════════════════
+//  INTERVENTION
+// ═══════════════════════════════════════════════════
+const THREATS = [
+  'An anomalous signal cluster has formed two blocks from your current position. Residue destabilizing — two cells at risk of corruption. The intervention window is open now.',
+  'A synchronized pressure spike has formed in an adjacent corridor. Unstable resonance pattern building. If left unaddressed, the zone becomes permanently compromised.',
+];
+
+const CONSTRAINTS = {
+  salvage:     'Your loadout is configured for recovery operations. Salvage doctrine has limited active suppression — containment will be resource-costly.',
+  harvest:     'Your loadout prioritizes yield extraction. Signal Harvest doctrine is not optimized for anomaly containment.',
+  suppression: 'Suppression doctrine active. Your loadout is well-matched to this threat type. Engagement risk is substantially reduced.',
+  recon:       'Recon doctrine is not configured for active intervention. You have limited containment capability with this loadout.',
+};
+
+function openIntervention() {
+  document.getElementById('threatDesc').textContent    = THREATS[Math.floor(Math.random() * THREATS.length)];
+  document.getElementById('constraintText').textContent = CONSTRAINTS[cfg.doctrine];
+
+  const isSuppression = cfg.doctrine === 'suppression';
+
+  const choices = [
+    {
+      id:   'engage',
+      name: 'Engage',
+      meta: `High risk, high reward. Force direct resolution. ${isSuppression ? 'Suppression loadout reduces risk significantly.' : 'Your loadout is not optimized for this — outcome uncertain.'}`,
+      cls:  'choice-high',
+    },
+    {
+      id:   'contain',
+      name: 'Contain',
+      meta: 'Moderate effort. Stabilize the anomaly and continue walk with reduced corridor pressure.',
+      cls:  'choice-mid',
+    },
+    {
+      id:   'withdraw',
+      name: 'Withdraw',
+      meta: 'Safe retreat. The anomaly persists. Yield from this corridor is penalized.',
+      cls:  'choice-safe',
+    },
+  ];
+
+  const container = document.getElementById('choiceBtns');
+  container.innerHTML = '';
+  choices.forEach(ch => {
+    const btn = document.createElement('button');
+    btn.className = `choice-btn ${ch.cls}`;
+    btn.innerHTML = `<div class="choice-name">${ch.name}</div><div class="choice-meta">${ch.meta}</div>`;
+    btn.onclick = () => resolveIntervention(ch.id);
+    container.appendChild(btn);
+  });
+
+  show('screen-intervention');
+}
+
+function resolveIntervention(choice) {
+  walk.interventionChoice = choice;
+  const isSuppression = cfg.doctrine === 'suppression';
+
+  let banner, bannerClass, logLines;
+
+  if (choice === 'engage') {
+    if (isSuppression) {
+      banner      = 'Anomaly Collapsed — Zone Stabilized';
+      bannerClass = 'outcome-success';
+      logLines    = [
+        ['Suppression doctrine engaged at full effectiveness.', 'good'],
+        ['Anomaly core disrupted. Residue cleared from adjacent cells.', 'good'],
+        ['Territory integrity restored. Signal yield in corridor increased.', 'good'],
+        ['Your loadout was right for this.', ''],
+      ];
+      walk.mapEffect = 'stabilized';
+    } else {
+      banner      = 'Partial Disruption — Network Unstable';
+      bannerClass = 'outcome-partial';
+      logLines    = [
+        ['Anomaly partially disrupted. Doctrine mismatch created blowback.', 'warn'],
+        ['Two adjacent cells remain under elevated pressure.', 'warn'],
+        ['Signal yield variance increased in this zone.', ''],
+        ['The corridor is passable. The anomaly is not resolved.', 'bad'],
+      ];
+      walk.mapEffect = 'partial';
+    }
+  } else if (choice === 'contain') {
+    banner      = isSuppression ? 'Contained — Pressure Reduced' : 'Holding — Barely Stable';
+    bannerClass = isSuppression ? 'outcome-success' : 'outcome-partial';
+    logLines    = [
+      [isSuppression ? 'Suppression doctrine contained the anomaly efficiently.' : 'Containment established. Pressure partially suppressed.', isSuppression ? 'good' : 'warn'],
+      ['Zone is no longer escalating. Corridor stable for now.', ''],
+      [isSuppression ? 'Residue sealed. No yield penalty.' : 'Yield from this corridor reduced by 20%.', isSuppression ? 'good' : 'warn'],
+      ['Continue walk. Monitor this corridor on return.', ''],
+    ];
+    walk.mapEffect = 'contained';
+  } else {
+    banner      = 'Withdrawn — Anomaly Persists';
+    bannerClass = 'outcome-fail';
+    logLines    = [
+      ['Disengaged safely. No damage taken.', ''],
+      ['Anomaly remains active in this corridor.', 'bad'],
+      ['Yield from this zone penalized until resolved.', 'bad'],
+      ['Threat will compound if not addressed in a future walk.', 'warn'],
+    ];
+    walk.mapEffect = 'worsened';
+  }
+
+  // Apply map consequence to anomaly tile
+  if (walk.anomalyRow >= 0) {
+    const r = walk.anomalyRow, c = walk.anomalyCol;
+    const el = document.getElementById(`t${r}${c}`);
+    if (el) {
+      if (walk.mapEffect === 'stabilized') {
+        walk.anomalyRow = -1; walk.anomalyCol = -1;
+        renderTile(r, c);
+        walk.signal += 18;
+      } else if (walk.mapEffect === 'contained') {
+        walk.anomalyRow = -1; walk.anomalyCol = -1;
+        el.className = 'tile tile-building';
+        walk.signal += 8;
+      } else if (walk.mapEffect === 'partial') {
+        el.className = 'tile tile-anomaly';
+        el.style.opacity = '.55';
+      } else {
+        el.className = 'tile tile-anomaly';
+        el.style.boxShadow = '0 0 14px rgba(247,129,102,.45)';
+      }
+    }
+  }
+
+  // Render outcome screen
+  const bEl = document.getElementById('outcomeBanner');
+  bEl.className = `outcome-banner ${bannerClass}`;
+  document.getElementById('outcomeTitle').textContent = banner;
+  document.getElementById('outcomeSub').textContent   = 'Intervention resolved — return to walk when ready.';
+
+  const log = document.getElementById('outcomeLog');
+  log.innerHTML = '';
+  logLines.forEach(([text, cls]) => {
+    const d = document.createElement('div');
+    d.className = `olog-line ${cls}`;
+    d.textContent = text;
+    log.appendChild(d);
+  });
+
+  show('screen-outcome');
+}
+
+function returnToWalk() {
+  walk.active = true;
+  moveTimer = setInterval(movePlayer, 2200);
+
+  const returnLines = {
+    stabilized: 'Zone stabilized. Territory integrity restored. Resuming.',
+    contained:  'Containment established. Monitoring this corridor.',
+    partial:    'Anomaly partially disrupted. Elevated variance expected.',
+    worsened:   'Threat persists. Yield penalty active in that corridor.',
+  };
+  addLine(returnLines[walk.mapEffect] || 'Intervention resolved. Resuming walk.', 'advisory');
+
+  show('screen-walk');
+}
+
+// ═══════════════════════════════════════════════════
+//  CHECK YIELD (mid-walk)
+// ═══════════════════════════════════════════════════
+const RESIDUE = {
+  salvage:     'construction fragment',
+  harvest:     'dense signal residue',
+  suppression: 'stabilized pressure residue',
+  recon:       'topology fragment',
+};
+
+function checkYield() {
+  const fam = walk.familiar.size;
+  const nw  = walk.newTiles.size;
+
+  if (fam === 0 && nw === 0) {
+    addLine('Still accumulating. Keep moving — first tiles registering.', 'passive');
+    return;
+  }
+
+  const lines = [];
+  if (fam > 0) {
+    lines.push(`Familiar routes (${fam} tiles): concentrated Signal + ${RESIDUE[cfg.doctrine]}.`);
+  }
+  if (nw > 0) {
+    lines.push(`New territory (${nw} tiles): variety Signal + discovery bonus (+${nw * 2} units).`);
+  }
+
+  lines.forEach(l => addLine(l, 'advisory'));
+}
+
+// ═══════════════════════════════════════════════════
+//  END WALK → SUMMARY
+// ═══════════════════════════════════════════════════
+function endWalk() {
+  walk.active = false;
+  clearInterval(moveTimer);
+  clearInterval(clockTimer);
+  clearInterval(passiveTimer);
+  clearInterval(advisoryTimer);
+  clearTimeout(escalationTimer);
+
+  const fam = walk.familiar.size;
+  const nw  = walk.newTiles.size;
+  const sig = walk.signal;
+
+  document.getElementById('sumSignal').textContent   = sig;
+  document.getElementById('sumFamiliar').textContent = fam;
+  document.getElementById('sumNew').textContent      = nw;
+
+  // 3-line post-walk summary
+  const line1 = fam >= nw
+    ? `Network produced <b>${sig} Signal</b> — concentrated <b>${RESIDUE[cfg.doctrine]}</b> from familiar infrastructure.`
+    : `Network produced <b>${sig} Signal</b> — variety yield from <b>${nw} new topology signatures</b>.`;
+
+  let line2;
+  const choice = walk.interventionChoice;
+  if (choice === 'engage') {
+    line2 = cfg.doctrine === 'suppression'
+      ? 'Intervention: zone stabilized. Territory integrity improved — corridor yield increased.'
+      : 'Intervention: anomaly partially disrupted. Corridor variance elevated — monitor on return.';
+  } else if (choice === 'contain') {
+    line2 = 'Intervention: anomaly contained. Corridor under monitoring — address in next walk.';
+  } else if (choice === 'withdraw') {
+    line2 = 'Intervention: anomaly persists. Corridor yield penalized — priority target for next walk.';
+  } else if (fam >= 5) {
+    line2 = `${fam} familiar tiles deepened — infrastructure density increasing. Routes consolidating.`;
+  } else {
+    line2 = nw > 0
+      ? `${nw} new topology signatures registered. Territory coverage expanding.`
+      : 'Territory still sparse. Continue building coverage on future walks.';
+  }
+
+  const DOCTRINE_LABELS = { salvage:'Salvage', harvest:'Signal Harvest', suppression:'Suppression', recon:'Recon' };
+  const line3 = fam > 10
+    ? 'Movement consolidating into familiar patterns. Consider <b>Recon</b> doctrine to expand coverage.'
+    : nw > 10
+    ? 'High discovery activity. <b>Signal Harvest</b> will amplify yield once routes establish.'
+    : `Walk complete. Doctrine: <b>${DOCTRINE_LABELS[cfg.doctrine]}</b> — Posture: <b>${cfg.posture.charAt(0).toUpperCase()+cfg.posture.slice(1)}</b>.`;
+
+  const container = document.getElementById('summaryLines');
+  container.innerHTML = '';
+  [
+    { text: line1, cls: 'yield-line' },
+    { text: line2, cls: 'change-line' },
+    { text: line3, cls: 'note-line' },
+  ].forEach(({ text, cls }) => {
+    const d = document.createElement('div');
+    d.className = `sum-line ${cls}`;
+    d.innerHTML = text;
+    container.appendChild(d);
+  });
+
+  show('screen-summary');
+}
+
+// ═══════════════════════════════════════════════════
+//  RESET
+// ═══════════════════════════════════════════════════
+function resetToConfig() {
+  document.getElementById('companionFeed').innerHTML = '';
+  show('screen-config');
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+show('screen-config');
 </script>
 </body>
 </html>
