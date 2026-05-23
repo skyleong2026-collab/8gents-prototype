@@ -618,15 +618,104 @@ body {
 
 <script>
 // ═══════════════════════════════════════════════════
+//  TERRITORY MEMORY  (localStorage persistence)
+// ═══════════════════════════════════════════════════
+const TM = (() => {
+  const KEY = '8gents_territory_v1';
+  let state = null;
+
+  function today() { return new Date().toISOString().split('T')[0]; }
+
+  function daysBetween(d1, d2) {
+    return Math.round((new Date(d2) - new Date(d1)) / 86400000);
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      state = raw ? JSON.parse(raw) : fresh();
+    } catch { state = fresh(); }
+    return state;
+  }
+
+  function fresh() {
+    return { tiles: {}, lastSessionDate: null, lastDecayDate: null };
+  }
+
+  function save() {
+    if (!state) return;
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+  }
+
+  // Apply time-decay to stability scores — once per calendar day
+  function applyDecay() {
+    const d = today();
+    if (state.lastDecayDate === d) return;
+    state.lastDecayDate = d;
+    Object.values(state.tiles).forEach(t => {
+      if (!t.lastVisitDate) return;
+      const days = daysBetween(t.lastVisitDate, d);
+      if (days > 0) t.stabilityScore = Math.max(0, t.stabilityScore - days * 0.07);
+    });
+  }
+
+  function getTile(r, c) { return state.tiles[`${r},${c}`] || null; }
+
+  function markVisited(r, c) {
+    const key = `${r},${c}`;
+    const d   = today();
+    if (!state.tiles[key]) {
+      state.tiles[key] = {
+        totalVisits: 0, sessionCount: 0,
+        lastVisitDate: null, firstVisitDate: d,
+        consecutiveDays: 0, interventionEffect: null,
+        stabilityScore: 1.0,
+      };
+    }
+    const t = state.tiles[key];
+    t.totalVisits++;
+    if (t.lastVisitDate !== d) {
+      t.sessionCount++;
+      const gap = t.lastVisitDate ? daysBetween(t.lastVisitDate, d) : 0;
+      t.consecutiveDays = gap === 1 ? t.consecutiveDays + 1 : 1;
+      t.stabilityScore  = Math.min(1.0, t.stabilityScore + 0.15);
+      t.lastVisitDate   = d;
+    }
+  }
+
+  function markIntervention(r, c, effect) {
+    const t = state.tiles[`${r},${c}`];
+    if (t) t.interventionEffect = effect;
+  }
+
+  function daysSinceVisit(r, c) {
+    const t = getTile(r, c);
+    if (!t || !t.lastVisitDate) return null;
+    return daysBetween(t.lastVisitDate, today());
+  }
+
+  function sessionGap() {
+    if (!state.lastSessionDate) return null;
+    return daysBetween(state.lastSessionDate, today());
+  }
+
+  function startSession() { state.lastSessionDate = today(); }
+  function endSession()   { save(); }
+
+  return { load, save, applyDecay, getTile, markVisited, markIntervention,
+           daysSinceVisit, sessionGap, startSession, endSession };
+})();
+
+// ═══════════════════════════════════════════════════
 //  CONFIG STATE
 // ═══════════════════════════════════════════════════
 const cfg = { doctrine: null, posture: null, objective: null };
 
 const POSTURE_HINTS = {
   silent:   'Silence is discipline. Only critical escalations will fire.',
-  ambient:  'Sparse observations. One advisory per corridor shift + escalation.',
-  active:   'Full operational cadence. Passive + advisory + escalation.',
-  tactical: 'Heightened awareness. Full cadence with enhanced intervention detail.',
+  ambient:  'Sparse observations, territory-driven.',
+  active:   'Full cadence. The companion will speak when it has something to say.',
+  tactical: 'Heightened awareness. Full cadence with close attention during interventions.',
 };
 
 function selectDoctrine(el) {
@@ -677,49 +766,64 @@ const walk = {
 };
 
 // Timers
-let moveTimer, clockTimer, passiveTimer, advisoryTimer, escalationTimer;
+let moveTimer, clockTimer, escalationTimer;
 
 // ═══════════════════════════════════════════════════
-//  COMPANION LINES
+//  COMPANION OBSERVATIONS
+//  No stat language. No system names. Temporal, sparse, observational.
 // ═══════════════════════════════════════════════════
-const PASSIVE = {
-  salvage:     [
-    'Residue layer consolidating. Salvage yield building.',
-    'Infrastructure signatures stable along this corridor.',
-    'Recovery efficiency nominal. Terrain mapping in progress.',
+const OBS = {
+  returning_short: [
+    "Something shifted while you were gone. Not dramatically. Just differently.",
+    "It moved on a little without you.",
+    "The network doesn't pause when you leave.",
   ],
-  harvest:     [
-    'Signal density increasing. Harvest accumulating.',
-    'This route is becoming structurally reliable.',
-    'Network depth activating. Yield layer thickening.',
+  returning_long: [
+    "This place is starting to forget you.",
+    "You've been away a while. It shows.",
+    "A few days without attention changes things here.",
   ],
-  suppression: [
-    'Territory pressure holding. Suppression posture maintaining containment.',
-    'No escalation signatures. Corridor clear.',
-    'Perimeter integrity stable. Continue current heading.',
+  deep_familiar: [
+    "You've been through here enough times. It knows you now.",
+    "This route sounds quieter lately.",
+    "This place has settled around your patterns.",
   ],
-  recon:       [
-    'Network topology updating. Discovery margin generating.',
-    'New signatures catalogued. Coverage expanding.',
-    'Recon sweep active. Territory profile building.',
+  neglected_tile: [
+    "You ignored this for a while. It noticed.",
+    "The pressure here has been building without you.",
+    "Things don't stay quiet when you're not paying attention.",
   ],
-};
-
-const ADVISORY = {
-  salvage_new:        'Volatile topology detected. Salvage doctrine optimizes for stable ground — yield may fragment here.',
-  salvage_familiar:   'Familiar corridor active. Salvage efficiency high — infrastructure consolidating.',
-  harvest_new:        'Unfamiliar signal structure. Harvest efficiency reduced — topology unmapped.',
-  harvest_familiar:   'Deep signal layer activated. Familiar route amplifying harvest yield.',
-  suppression_new:    'Unmapped pressure topology. Suppression doctrine well-suited for unknown territory.',
-  suppression_familiar:'Familiar zone, low pressure. Suppression capability over-prepared here.',
-  recon_new:          'New topology generating discovery signatures. Recon doctrine fully engaged.',
-  recon_familiar:     'Known territory limits discovery yield. Recon doctrine underutilized here.',
+  intervention_memory: [
+    "You weren't this careful here before.",
+    "The pressure spreads differently now.",
+    "Something was resolved here. You can still feel the seam.",
+  ],
+  instability: [
+    "This corridor hasn't settled since you were last here.",
+    "This used to settle faster.",
+    "Something in here is still adjusting.",
+  ],
+  ambient: [
+    "Quiet here.",
+    "The network is holding. For now.",
+    "Nothing unusual. That's unusual.",
+  ],
 };
 
 const ESCALATION = [
   'Containment failure imminent. Anomaly forming nearby.',
   'Unstable cluster detected. Intervention window open.',
 ];
+
+// Per-walk observation state (rate-limiting)
+const companion = {
+  sessionObsFired: false,
+  tileObsCount:    0,
+  ambientFired:    false,
+  lastLine:        null,
+  lastObsTime:     0,
+  walkStartTime:   0,
+};
 
 // ═══════════════════════════════════════════════════
 //  SCREEN ROUTING
@@ -734,6 +838,10 @@ function show(id) {
 // ═══════════════════════════════════════════════════
 function startWalk() {
   if (!cfg.doctrine || !cfg.posture || !cfg.objective) return;
+
+  // Load territory memory and apply daily decay
+  TM.load();
+  TM.applyDecay();
 
   // Reset tile grid
   tileCounts = Array.from({ length: G }, () => new Array(G).fill(0));
@@ -750,6 +858,16 @@ function startWalk() {
   walk.anomalyRow = -1;
   walk.anomalyCol = -1;
   walk.mapEffect = null;
+
+  // Reset companion rate-limiter
+  companion.sessionObsFired = false;
+  companion.tileObsCount    = 0;
+  companion.ambientFired    = false;
+  companion.lastLine        = null;
+  companion.lastObsTime     = 0;
+  companion.walkStartTime   = Date.now();
+
+  TM.startSession();
 
   // Context chips
   const DOCTRINE_LABELS = { salvage:'Salvage', harvest:'Signal Harvest', suppression:'Suppression', recon:'Recon' };
@@ -802,6 +920,11 @@ function visitTile(r, c) {
   // Signal yield: familiar tiles produce more concentrated yield
   walk.signal += count >= 5 ? 3 : count >= 3 ? 2 : 1;
   renderTile(r, c);
+
+  // Territory memory: update historical state and maybe observe
+  TM.markVisited(r, c);
+  // Only check on first visit to a tile this session; sparse random gate
+  if (count === 1 && Math.random() < 0.18) fireTileObservation(r, c);
 }
 
 function renderTile(r, c) {
@@ -880,6 +1003,10 @@ function movePlayer() {
 }
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function pickFresh(arr, exclude) {
+  const available = arr.filter(l => l !== exclude);
+  return (available.length ? available : arr)[Math.floor(Math.random() * (available.length || arr.length))];
+}
 
 // ═══════════════════════════════════════════════════
 //  COMPANION SYSTEM
@@ -887,33 +1014,68 @@ function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function scheduleCompanion() {
   const p = cfg.posture;
 
-  if (p === 'active' || p === 'tactical') {
-    // First passive fires early so the player hears the companion right away
-    setTimeout(firePassive, 8000);
-    passiveTimer  = setInterval(firePassive,  18000);
-    setTimeout(fireAdvisory, 38000);
-    advisoryTimer = setInterval(fireAdvisory, 55000);
-  } else if (p === 'ambient') {
-    setTimeout(fireAdvisory, 35000);
-    advisoryTimer = setInterval(fireAdvisory, 75000);
-  }
-  // Silent: no passives or advisories until escalation
+  // Session-level observation: fires once, ~12s in, if player is returning after a gap
+  if (p !== 'silent') setTimeout(fireSessionObservation, 12000);
 
-  // Escalation fires once at ~90s (prototype timing; real game would be event-driven)
+  // Ambient fallback: fires once at ~3 min if barely anything else has fired
+  if (p === 'active' || p === 'tactical') {
+    setTimeout(() => { if (companion.tileObsCount < 1) fireAmbient(); }, 185000);
+  }
+
+  // Escalation fires once at ~90s (prototype timing; real game is event-driven)
   escalationTimer = setTimeout(fireEscalation, 90000);
 }
 
-function firePassive() {
-  if (!walk.active) return;
-  const lines = PASSIVE[cfg.doctrine] || PASSIVE.harvest;
-  addLine(lines[Math.floor(Math.random() * lines.length)], 'passive');
+// Fires once per walk if returning after a day or more
+function fireSessionObservation() {
+  if (!walk.active || companion.sessionObsFired) return;
+  const gap = TM.sessionGap();
+  if (!gap || gap === 0) return;  // same-day restart or first ever session — nothing to say
+  companion.sessionObsFired = true;
+  const pool = gap >= 3 ? OBS.returning_long : OBS.returning_short;
+  addLine(pickFresh(pool, companion.lastLine), 'advisory');
 }
 
-function fireAdvisory() {
+// Fires when visiting a tile with meaningful history; budget 2 per walk
+function fireTileObservation(r, c) {
   if (!walk.active) return;
-  const zone = walk.newTiles.size > walk.familiar.size ? 'new' : 'familiar';
-  const key  = `${cfg.doctrine}_${zone}`;
-  addLine(ADVISORY[key] || ADVISORY.harvest_familiar, 'advisory');
+  if (companion.tileObsCount >= 2) return;
+
+  const now = Date.now();
+  // Don't fire in the first 20s or within 30s of the last observation
+  if (now - companion.walkStartTime < 20000) return;
+  if (now - companion.lastObsTime   < 30000) return;
+
+  const tile = TM.getTile(r, c);
+  if (!tile) return;  // never visited in a prior session — nothing to recall
+
+  const gap = TM.daysSinceVisit(r, c);
+
+  // Pick observation type by priority
+  let pool = null;
+  if (tile.interventionEffect && Math.random() < 0.45) {
+    pool = OBS.intervention_memory;
+  } else if (gap !== null && gap >= 3 && tile.sessionCount >= 2) {
+    pool = OBS.neglected_tile;
+  } else if (tile.stabilityScore < 0.45 && Math.random() < 0.4) {
+    pool = OBS.instability;
+  } else if (tile.sessionCount >= 4 && Math.random() < 0.3) {
+    pool = OBS.deep_familiar;
+  }
+
+  if (!pool) return;
+
+  const line = pickFresh(pool, companion.lastLine);
+  companion.tileObsCount++;
+  companion.lastObsTime = now;
+  addLine(line, 'advisory');
+}
+
+// Quiet ambient fallback for very sparse walks
+function fireAmbient() {
+  if (!walk.active || companion.ambientFired) return;
+  companion.ambientFired = true;
+  addLine(pickFresh(OBS.ambient, companion.lastLine), 'passive');
 }
 
 function fireEscalation() {
@@ -1054,6 +1216,11 @@ function resolveIntervention(choice) {
     walk.mapEffect = 'worsened';
   }
 
+  // Record intervention in territory memory
+  if (walk.anomalyRow >= 0) {
+    TM.markIntervention(walk.anomalyRow, walk.anomalyCol, walk.mapEffect);
+  }
+
   // Apply map consequence to anomaly tile
   if (walk.anomalyRow >= 0) {
     const r = walk.anomalyRow, c = walk.anomalyCol;
@@ -1100,12 +1267,13 @@ function returnToWalk() {
   moveTimer = setInterval(movePlayer, 2200);
 
   const returnLines = {
-    stabilized: 'Zone stabilized. Territory integrity restored. Resuming.',
-    contained:  'Containment established. Monitoring this corridor.',
-    partial:    'Anomaly partially disrupted. Elevated variance expected.',
-    worsened:   'Threat persists. Yield penalty active in that corridor.',
+    stabilized: 'Something settled back there. You can feel it.',
+    contained:  'It stopped moving. That might hold.',
+    partial:    "It's quieter. Not quiet.",
+    worsened:   "You left something open. It'll still be there.",
   };
-  addLine(returnLines[walk.mapEffect] || 'Intervention resolved. Resuming walk.', 'advisory');
+  const returnLine = returnLines[walk.mapEffect];
+  if (returnLine) addLine(returnLine, 'advisory');
 
   show('screen-walk');
 }
@@ -1147,9 +1315,8 @@ function endWalk() {
   walk.active = false;
   clearInterval(moveTimer);
   clearInterval(clockTimer);
-  clearInterval(passiveTimer);
-  clearInterval(advisoryTimer);
   clearTimeout(escalationTimer);
+  TM.endSession();
 
   const fam = walk.familiar.size;
   const nw  = walk.newTiles.size;
