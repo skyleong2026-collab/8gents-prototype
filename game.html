@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>8gents — Cadence Prototype</title>
+<title>8gents — v20</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -20,6 +20,7 @@
   --warn:     #e3b341;
   --familiar: #4a9e52;
   --new-col:  #3d7ab5;
+  --d-accent: #00d4ff;
 }
 
 body {
@@ -40,6 +41,21 @@ body {
   min-height: 100vh;
 }
 .hidden { display: none !important; }
+
+/* ─── VERSION TAG ─── */
+#vt {
+  position: fixed;
+  top: 9px;
+  right: 11px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 1.2px;
+  z-index: 9999;
+  opacity: 0.45;
+  pointer-events: none;
+  font-family: monospace;
+}
 
 /* ─── SHARED HEADER ─── */
 .hdr {
@@ -74,7 +90,6 @@ body {
   color: var(--muted); margin-bottom: 10px;
 }
 
-/* Doctrine cards */
 .doctrine-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
 }
@@ -100,7 +115,6 @@ body {
 }
 .doctrine-card.selected .doctrine-desc { color: var(--text); }
 
-/* Monitoring posture */
 .posture-row {
   display: flex; gap: 6px;
 }
@@ -124,7 +138,6 @@ body {
   min-height: 14px; line-height: 1.4;
 }
 
-/* Walk objective */
 .objective-row {
   display: flex; gap: 8px;
 }
@@ -143,7 +156,6 @@ body {
   color: var(--safe);
 }
 
-/* Deploy button */
 .deploy-wrap { padding-top: 4px; }
 .deploy-btn {
   width: 100%; padding: 16px;
@@ -175,7 +187,7 @@ body {
   padding: 8px 4px; text-align: center;
 }
 .wstat-label { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
-.wstat-value { font-size: 16px; font-weight: 700; margin-top: 2px; }
+.wstat-value { font-size: 15px; font-weight: 700; margin-top: 2px; }
 
 .walk-context {
   display: flex; gap: 6px; padding: 7px 12px;
@@ -189,6 +201,11 @@ body {
 .chip-doctrine { background: rgba(0,212,255,.1); color: var(--signal); border: 1px solid rgba(0,212,255,.3); }
 .chip-posture  { background: rgba(163,113,247,.1); color: #a371f7; border: 1px solid rgba(163,113,247,.3); }
 .chip-obj      { background: rgba(63,185,80,.1); color: var(--safe); border: 1px solid rgba(63,185,80,.3); }
+.chip-zone     { background: rgba(125,133,144,.08); color: var(--muted); border: 1px solid rgba(125,133,144,.2); transition: background .4s, color .4s, border-color .4s; }
+.chip-zone.zone-W { background: rgba(64,140,200,.12); color: #5ba3cc; border-color: rgba(64,140,200,.3); }
+.chip-zone.zone-P { background: rgba(80,160,90,.12); color: #5aae69; border-color: rgba(80,160,90,.3); }
+.chip-zone.zone-U { background: rgba(220,180,80,.1); color: #c8a944; border-color: rgba(220,180,80,.3); }
+.chip-zone.zone-I { background: rgba(220,90,50,.1); color: #c86040; border-color: rgba(220,90,50,.3); }
 
 /* Territory grid */
 .grid-wrap { padding: 10px 12px 4px; flex-shrink: 0; }
@@ -204,7 +221,21 @@ body {
   transition: background .6s, border-color .4s;
   border: 2px solid transparent;
   cursor: default;
+  overflow: hidden;
 }
+
+/* Tile type tint overlay — very subtle, felt not read */
+.tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.tenv-W::before { background: rgba(64,140,200,0.09); }
+.tenv-P::before { background: rgba(80,160,90,0.09); }
+.tenv-U::before { background: rgba(220,180,80,0.08); }
+.tenv-I::before { background: rgba(220,90,50,0.09); }
 
 /* Visit-count tile classes */
 .tile-unvisited  { background: #0f141a; }
@@ -230,6 +261,7 @@ body {
   top: 50%; left: 50%;
   transform: translate(-50%,-50%);
   box-shadow: 0 0 6px var(--signal);
+  z-index: 1;
 }
 
 /* Anomaly marker */
@@ -244,8 +276,8 @@ body {
 
 /* Territory legend */
 .territory-legend {
-  display: flex; gap: 10px 16px; flex-wrap: wrap;
-  padding: 4px 12px 8px; font-size: 9px; color: var(--muted);
+  display: flex; gap: 10px 14px; flex-wrap: wrap;
+  padding: 4px 12px 6px; font-size: 9px; color: var(--muted);
   flex-shrink: 0;
 }
 .tleg { display: flex; align-items: center; gap: 5px; }
@@ -274,13 +306,11 @@ body {
   color: var(--accent);
   background: rgba(247,129,102,.05);
 }
-
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(5px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Walk buttons */
 .walk-btns {
   display: flex; gap: 8px; padding: 10px 12px;
   background: var(--surface); border-top: 1px solid var(--border);
@@ -298,37 +328,207 @@ body {
 .btn-secondary { background: var(--raised); color: var(--muted); border: 1px solid var(--border); }
 .btn-end       { background: rgba(63,185,80,.12); color: var(--safe); border: 1px solid rgba(63,185,80,.3); }
 
-/* ─── INTERVENTION SCREEN ─── */
-.intervention-body {
+/* ─── DUNGEON ENTRY SCREEN ─── */
+.dungeon-entry-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 48px 28px 60px;
+  background: var(--bg);
+}
+.dentry-marker {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  color: var(--d-accent);
+  margin-bottom: 40px;
+  opacity: 0.6;
+}
+#dungeonEntryLines {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+.dentry-line {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+  opacity: 0;
+  animation: dentry-appear 0.7s ease-out forwards;
+}
+@keyframes dentry-appear {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── DUNGEON RUN SCREEN ─── */
+.dungeon-trail-wrap {
+  padding: 16px 20px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.dungeon-trail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+.dungeon-node {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--raised);
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  transition: all .4s ease;
+  position: relative;
+}
+.dungeon-node.node-visited {
+  background: var(--raised);
+  border-color: var(--muted);
+  opacity: 0.4;
+}
+.dungeon-node.node-current {
+  background: var(--d-accent);
+  border-color: var(--d-accent);
+  box-shadow: 0 0 10px var(--d-accent);
+}
+.dungeon-node.node-recognition {
+  border-radius: 2px;
+  transform: rotate(45deg) scale(0.9);
+}
+.dungeon-node.node-recognition.node-visited {
+  transform: rotate(45deg) scale(0.9);
+  opacity: 0.4;
+}
+.dungeon-node.node-recognition.node-current {
+  background: var(--warn);
+  border-color: var(--warn);
+  box-shadow: 0 0 10px rgba(227,179,65,.7);
+  transform: rotate(45deg) scale(1.05);
+}
+.dungeon-node.node-anomaly {
+  width: 16px; height: 16px;
+  border-color: var(--accent);
+  border-style: dashed;
+  border-radius: 3px;
+}
+.dungeon-node.node-anomaly.node-current {
+  background: rgba(247,129,102,.15);
+  border-style: solid;
+  box-shadow: 0 0 10px rgba(247,129,102,.5);
+}
+.dungeon-connector {
+  height: 2px;
+  background: var(--border);
+  flex: 1;
+  max-width: 36px;
+  min-width: 10px;
+  transition: background .4s;
+}
+.dungeon-connector.node-visited-after {
+  background: var(--muted);
+  opacity: 0.3;
+}
+.dungeon-connector.topology-narrow { max-width: 14px; min-width: 8px; }
+.dungeon-connector.topology-recursive { max-width: 20px; }
+.dungeon-connector.topology-branching { max-width: 48px; }
+
+.dungeon-run-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px 14px;
+  gap: 14px;
+  overflow-y: auto;
+}
+.encounter-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 18px;
+  animation: fade-in .45s ease-out;
+  min-height: 72px;
+}
+.encounter-card.recognition-moment {
+  border-color: rgba(227,179,65,.35);
+  background: rgba(227,179,65,.04);
+}
+.encounter-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+}
+.encounter-card.recognition-moment .encounter-text {
+  color: var(--warn);
+}
+.dungeon-companion {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+  padding: 8px 12px;
+  border-left: 2px solid var(--border);
+  min-height: 36px;
+  animation: fade-in .4s ease-out;
+  transition: border-color .3s;
+}
+.dungeon-companion.recognition-voice {
+  border-left-color: var(--warn);
+  color: rgba(227,179,65,.85);
+}
+.dungeon-continue-wrap {
+  margin-top: auto;
+  padding-top: 8px;
+}
+.btn-dungeon-continue {
+  width: 100%; padding: 13px;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: var(--raised); color: var(--text);
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  letter-spacing: .5px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: border-color .2s, background .2s;
+}
+.btn-dungeon-continue:active { opacity: .8; }
+.btn-dungeon-assess {
+  border-color: rgba(247,129,102,.35);
+  color: var(--accent);
+  background: rgba(247,129,102,.06);
+}
+
+/* ─── DUNGEON RESOLUTION SCREEN ─── */
+.dungeon-resolution-body {
   padding: 16px; display: flex; flex-direction: column; gap: 14px;
   flex: 1; overflow-y: auto;
 }
-.threat-box {
-  background: rgba(227,179,65,.07);
-  border: 1px solid rgba(227,179,65,.3);
+.dr-threat {
+  background: rgba(227,179,65,.06);
+  border: 1px solid rgba(227,179,65,.25);
   border-radius: 8px; padding: 14px;
 }
-.threat-label {
+.dr-threat-label {
   font-size: 9px; text-transform: uppercase; letter-spacing: 1.2px;
   color: var(--warn); font-weight: 700; margin-bottom: 8px;
 }
-.threat-desc {
+.dr-threat-text {
   font-size: 12px; color: var(--text); line-height: 1.65;
 }
-
-.constraint-box {
-  background: rgba(247,129,102,.05);
-  border: 1px solid rgba(247,129,102,.25);
+.dr-constraint {
+  background: rgba(247,129,102,.04);
+  border: 1px solid rgba(247,129,102,.2);
   border-radius: 8px; padding: 12px;
 }
-.constraint-label {
+.dr-constraint-label {
   font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
-  color: rgba(247,129,102,.65); margin-bottom: 5px;
+  color: rgba(247,129,102,.6); margin-bottom: 5px;
 }
-.constraint-text {
+.dr-constraint-text {
   font-size: 11px; color: var(--accent); line-height: 1.5;
 }
-
 .choice-btns { display: flex; flex-direction: column; gap: 8px; }
 .choice-btn {
   width: 100%; padding: 14px 16px;
@@ -347,7 +547,6 @@ body {
 .choice-meta {
   font-size: 10px; color: var(--muted); line-height: 1.4;
 }
-
 .choice-high .choice-name  { color: var(--accent); }
 .choice-high  { border-color: rgba(247,129,102,.35); }
 .choice-mid  .choice-name  { color: var(--warn); }
@@ -429,6 +628,9 @@ body {
 </head>
 <body>
 
+<!-- ══ ALWAYS-VISIBLE VERSION TAG ══ -->
+<div id="vt">v20</div>
+
 <!-- ══════════════ CONFIG ══════════════ -->
 <div id="screen-config" class="screen">
   <div class="hdr">
@@ -439,7 +641,6 @@ body {
 
   <div class="config-body">
 
-    <!-- DOCTRINE -->
     <div>
       <div class="section-label">Doctrine</div>
       <div class="doctrine-grid">
@@ -462,7 +663,6 @@ body {
       </div>
     </div>
 
-    <!-- MONITORING POSTURE -->
     <div>
       <div class="section-label">Monitoring Posture</div>
       <div class="posture-row">
@@ -474,7 +674,6 @@ body {
       <div class="posture-hint" id="postureHint">How often the companion speaks during your walk.</div>
     </div>
 
-    <!-- WALK OBJECTIVE -->
     <div>
       <div class="section-label">Walk Objective</div>
       <div class="objective-row">
@@ -520,6 +719,7 @@ body {
     <span class="ctx-chip chip-doctrine" id="ctxDoctrine">—</span>
     <span class="ctx-chip chip-posture"  id="ctxPosture">—</span>
     <span class="ctx-chip chip-obj"      id="ctxObj">—</span>
+    <span class="ctx-chip chip-zone"     id="ctxZone">—</span>
   </div>
 
   <div class="grid-wrap">
@@ -530,7 +730,13 @@ body {
     <div class="tleg"><div class="tleg-dot" style="background:#192d50"></div>New (1–2×)</div>
     <div class="tleg"><div class="tleg-dot" style="background:#223520"></div>Familiar (5+×)</div>
     <div class="tleg"><div class="tleg-dot" style="background:var(--signal);border-radius:50%"></div>You</div>
-    <div class="tleg"><div class="tleg-dot" style="background:var(--warn);border-radius:2px;animation:anomaly-pulse 1s infinite"></div>Anomaly</div>
+    <div class="tleg"><div class="tleg-dot" style="background:var(--warn);animation:anomaly-pulse 1s infinite"></div>Anomaly</div>
+  </div>
+  <div class="territory-legend" style="padding-top:0;padding-bottom:8px;">
+    <div class="tleg"><div class="tleg-dot" style="background:rgba(64,140,200,0.5)"></div>Water</div>
+    <div class="tleg"><div class="tleg-dot" style="background:rgba(80,160,90,0.5)"></div>Park</div>
+    <div class="tleg"><div class="tleg-dot" style="background:rgba(220,180,80,0.5)"></div>Urban</div>
+    <div class="tleg"><div class="tleg-dot" style="background:rgba(220,90,50,0.5)"></div>Industrial</div>
   </div>
 
   <div class="companion-feed" id="companionFeed"></div>
@@ -541,26 +747,56 @@ body {
   </div>
 </div>
 
-<!-- ══════════════ INTERVENTION ══════════════ -->
-<div id="screen-intervention" class="screen hidden">
+<!-- ══════════════ DUNGEON ENTRY ══════════════ -->
+<div id="screen-dungeon-entry" class="screen hidden">
   <div class="hdr">
     ⚡ 8GENTS
-    <span class="phase" style="color:var(--warn)">◈ INTERVENTION</span>
+    <span class="phase" id="dentryPhase" style="color:var(--d-accent)">◈ ANOMALY SIGNATURE</span>
   </div>
-  <div class="intervention-body">
+  <div class="dungeon-entry-body">
+    <div class="dentry-marker" id="dentryMarker">Entering</div>
+    <div id="dungeonEntryLines"></div>
+  </div>
+</div>
 
-    <div class="threat-box">
-      <div class="threat-label">▲ Anomaly Detected</div>
-      <div class="threat-desc" id="threatDesc">—</div>
+<!-- ══════════════ DUNGEON RUN ══════════════ -->
+<div id="screen-dungeon-run" class="screen hidden">
+  <div class="hdr">
+    ⚡ 8GENTS
+    <span class="phase" id="drunPhase" style="color:var(--d-accent)">◈ —</span>
+  </div>
+
+  <div class="dungeon-trail-wrap">
+    <div id="dungeonNodeTrail" class="dungeon-trail"></div>
+  </div>
+
+  <div class="dungeon-run-body">
+    <div id="dungeonEncounterCard" class="encounter-card">
+      <div id="dungeonEncounterText" class="encounter-text"></div>
     </div>
-
-    <div class="constraint-box">
-      <div class="constraint-label">Loadout Constraint</div>
-      <div class="constraint-text" id="constraintText">—</div>
+    <div id="dungeonCompanionEl" class="dungeon-companion"></div>
+    <div class="dungeon-continue-wrap">
+      <button id="dungeonContinueBtn" class="btn-dungeon-continue" onclick="advanceDungeon()" style="display:none">—</button>
     </div>
+  </div>
+</div>
 
-    <div class="choice-btns" id="choiceBtns"></div>
-
+<!-- ══════════════ DUNGEON RESOLUTION ══════════════ -->
+<div id="screen-dungeon-resolution" class="screen hidden">
+  <div class="hdr">
+    ⚡ 8GENTS
+    <span class="phase" style="color:var(--accent)">◈ ASSESS ANOMALY</span>
+  </div>
+  <div class="dungeon-resolution-body">
+    <div class="dr-threat">
+      <div class="dr-threat-label">▲ Anomaly Active</div>
+      <div class="dr-threat-text" id="drThreatText">—</div>
+    </div>
+    <div class="dr-constraint">
+      <div class="dr-constraint-label">Loadout Constraint</div>
+      <div class="dr-constraint-text" id="drConstraintText">—</div>
+    </div>
+    <div class="choice-btns" id="drChoiceBtns"></div>
   </div>
 </div>
 
@@ -571,17 +807,14 @@ body {
     <span class="phase">OUTCOME</span>
   </div>
   <div class="outcome-body">
-
     <div class="outcome-banner" id="outcomeBanner">
       <div class="outcome-title" id="outcomeTitle">—</div>
       <div class="outcome-sub"   id="outcomeSub">—</div>
     </div>
-
     <div class="outcome-log">
       <div class="olog-title">Resolution Log</div>
       <div id="outcomeLog"></div>
     </div>
-
     <button class="btn-return" onclick="returnToWalk()">Return to Walk</button>
   </div>
 </div>
@@ -593,7 +826,6 @@ body {
     <span class="phase">WALK COMPLETE</span>
   </div>
   <div class="summary-body">
-
     <div class="summary-stats">
       <div class="sstat">
         <div class="sstat-label">Signal</div>
@@ -608,46 +840,47 @@ body {
         <div class="sstat-value" id="sumNew" style="color:var(--new-col)">—</div>
       </div>
     </div>
-
     <div class="summary-lines" id="summaryLines"></div>
-
     <button class="btn-new-walk" onclick="resetToConfig()">Configure New Walk</button>
-
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+//  ENVIRONMENTAL TILE TYPE MAP  (8×8)
+//  Player starts at row 3, col 3 (PARK zone)
+//  W=Water  P=Park  U=Urban  I=Industrial
+// ═══════════════════════════════════════════════════════════
+const TENV = [
+  ['W','W','W','W','U','U','U','U'],
+  ['W','W','W','P','U','U','U','U'],
+  ['W','W','P','P','U','U','I','I'],
+  ['W','P','P','P','I','I','I','I'],
+  ['P','P','P','I','I','I','I','I'],
+  ['P','P','I','I','I','I','U','U'],
+  ['P','P','P','I','U','U','U','U'],
+  ['P','P','P','P','U','U','U','U'],
+];
+const TENV_NAMES = { W:'Water', P:'Park', U:'Urban', I:'Industrial' };
+
+// ═══════════════════════════════════════════════════════════
 //  TERRITORY MEMORY  (localStorage persistence)
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 const TM = (() => {
   const KEY = '8gents_territory_v1';
   let state = null;
 
   function today() { return new Date().toISOString().split('T')[0]; }
-
-  function daysBetween(d1, d2) {
-    return Math.round((new Date(d2) - new Date(d1)) / 86400000);
-  }
+  function daysBetween(d1, d2) { return Math.round((new Date(d2) - new Date(d1)) / 86400000); }
 
   function load() {
-    try {
-      const raw = localStorage.getItem(KEY);
-      state = raw ? JSON.parse(raw) : fresh();
-    } catch { state = fresh(); }
+    try { const raw = localStorage.getItem(KEY); state = raw ? JSON.parse(raw) : fresh(); }
+    catch { state = fresh(); }
     return state;
   }
+  function fresh() { return { tiles: {}, lastSessionDate: null, lastDecayDate: null }; }
+  function save() { if (!state) return; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} }
 
-  function fresh() {
-    return { tiles: {}, lastSessionDate: null, lastDecayDate: null };
-  }
-
-  function save() {
-    if (!state) return;
-    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
-  }
-
-  // Apply time-decay to stability scores — once per calendar day
   function applyDecay() {
     const d = today();
     if (state.lastDecayDate === d) return;
@@ -666,10 +899,9 @@ const TM = (() => {
     const d   = today();
     if (!state.tiles[key]) {
       state.tiles[key] = {
-        totalVisits: 0, sessionCount: 0,
-        lastVisitDate: null, firstVisitDate: d,
-        consecutiveDays: 0, interventionEffect: null,
-        stabilityScore: 1.0,
+        totalVisits: 0, sessionCount: 0, lastVisitDate: null,
+        firstVisitDate: d, consecutiveDays: 0,
+        interventionEffect: null, stabilityScore: 1.0,
       };
     }
     const t = state.tiles[key];
@@ -706,9 +938,9 @@ const TM = (() => {
            daysSinceVisit, sessionGap, startSession, endSession };
 })();
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  CONFIG STATE
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 const cfg = { doctrine: null, posture: null, objective: null };
 
 const POSTURE_HINTS = {
@@ -718,13 +950,19 @@ const POSTURE_HINTS = {
   tactical: 'Heightened awareness. Full cadence with close attention during interventions.',
 };
 
+const CONSTRAINTS = {
+  salvage:     'Your loadout is configured for recovery operations. Salvage doctrine has limited active suppression — containment will be resource-costly.',
+  harvest:     'Your loadout prioritizes yield extraction. Signal Harvest doctrine is not optimized for anomaly containment.',
+  suppression: 'Suppression doctrine active. Your loadout is well-matched to this threat type. Engagement risk is substantially reduced.',
+  recon:       'Recon doctrine is not configured for active intervention. You have limited containment capability with this loadout.',
+};
+
 function selectDoctrine(el) {
   document.querySelectorAll('.doctrine-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   cfg.doctrine = el.dataset.d;
   checkDeploy();
 }
-
 function selectPosture(el) {
   document.querySelectorAll('.posture-btn').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
@@ -732,46 +970,751 @@ function selectPosture(el) {
   document.getElementById('postureHint').textContent = POSTURE_HINTS[cfg.posture];
   checkDeploy();
 }
-
 function selectObjective(el) {
   document.querySelectorAll('.obj-btn').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
   cfg.objective = el.dataset.o;
   checkDeploy();
 }
-
 function checkDeploy() {
   const ready = cfg.doctrine && cfg.posture && cfg.objective;
   document.getElementById('deployBtn').classList.toggle('ready', !!ready);
 }
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  WALK STATE
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 const G = 8;
 let tileCounts = [];
 let playerRow = 3, playerCol = 3;
 
 const walk = {
-  active:      false,
-  startTime:   null,
-  signal:      0,
-  familiar:    new Set(),   // "r,c" keys of tiles visited 5+
-  newTiles:    new Set(),   // "r,c" keys of tiles visited 1-2
-  interventionFired:  false,
-  interventionChoice: null,
-  anomalyRow:  -1,
-  anomalyCol:  -1,
-  mapEffect:   null,
+  active: false, startTime: null, signal: 0,
+  familiar: new Set(), newTiles: new Set(),
+  interventionFired: false, interventionChoice: null,
+  anomalyRow: -1, anomalyCol: -1, mapEffect: null,
 };
 
-// Timers
-let moveTimer, clockTimer, escalationTimer;
+let moveTimer, clockTimer, dungeonEscalationTimer;
 
-// ═══════════════════════════════════════════════════
-//  COMPANION OBSERVATIONS
-//  No stat language. No system names. Temporal, sparse, observational.
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+//  MOVEMENT BEHAVIOR TRACKER  (new in v20)
+// ═══════════════════════════════════════════════════════════
+const moveBehavior = {
+  tileTypeCounts:  { W: 0, P: 0, U: 0, I: 0 },
+  moveTimestamps:  [],
+  uniquePositions: new Set(),
+  positionHistory: [],   // sliding window of last 20 "r,c" strings
+  revisitCount:    0,
+  loopScore:       0,    // incremented when re-entering a recently visited cell
+  lastRow:         -1,
+  lastCol:         -1,
+  lastDir:         null,
+  dirChanges:      0,
+};
+
+function resetMoveBehavior() {
+  moveBehavior.tileTypeCounts  = { W: 0, P: 0, U: 0, I: 0 };
+  moveBehavior.moveTimestamps  = [];
+  moveBehavior.uniquePositions = new Set();
+  moveBehavior.positionHistory = [];
+  moveBehavior.revisitCount    = 0;
+  moveBehavior.loopScore       = 0;
+  moveBehavior.lastRow         = -1;
+  moveBehavior.lastCol         = -1;
+  moveBehavior.lastDir         = null;
+  moveBehavior.dirChanges      = 0;
+}
+
+function trackMove(r, c) {
+  const key  = `${r},${c}`;
+  const type = TENV[r][c];
+
+  moveBehavior.tileTypeCounts[type]++;
+  moveBehavior.moveTimestamps.push(Date.now());
+
+  // Direction change tracking
+  if (moveBehavior.lastRow >= 0) {
+    const dr = r - moveBehavior.lastRow;
+    const dc = c - moveBehavior.lastCol;
+    const dir = dr < 0 ? 'N' : dr > 0 ? 'S' : dc < 0 ? 'W' : 'E';
+    if (moveBehavior.lastDir && dir !== moveBehavior.lastDir) moveBehavior.dirChanges++;
+    moveBehavior.lastDir = dir;
+  }
+  moveBehavior.lastRow = r;
+  moveBehavior.lastCol = c;
+
+  // Unique / revisit
+  if (moveBehavior.uniquePositions.has(key)) {
+    moveBehavior.revisitCount++;
+    // Loop detection: was this position visited in the recent 12 steps?
+    if (moveBehavior.positionHistory.slice(-12).includes(key)) moveBehavior.loopScore++;
+  } else {
+    moveBehavior.uniquePositions.add(key);
+  }
+
+  moveBehavior.positionHistory.push(key);
+  if (moveBehavior.positionHistory.length > 30) moveBehavior.positionHistory.shift();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BEHAVIOR ANALYSIS  (new in v20)
+// ═══════════════════════════════════════════════════════════
+function analyzeBehavior() {
+  const tc = moveBehavior.tileTypeCounts;
+  const totalMoves = Object.values(tc).reduce((s, v) => s + v, 0);
+
+  if (totalMoves < 3) {
+    return { dominantTile:'P', tileInfluence:{W:.25,P:.25,U:.25,I:.25},
+             secondTile:null, loopTendency:0, explorationBreadth:0,
+             paceRapid:false, dirStability:0.5, narrowMovement:false, totalMoves:0 };
+  }
+
+  const tileInfluence = {};
+  for (const [k, v] of Object.entries(tc)) tileInfluence[k] = v / totalMoves;
+
+  const sorted = Object.entries(tc).sort((a, b) => b[1] - a[1]);
+  const dominantTile = sorted[0][0];
+  const secondTile   = sorted[1][1] > 0 ? sorted[1][0] : null;
+
+  // Loop tendency: how often the player returned to a recent position
+  const loopTendency = Math.min(1, moveBehavior.loopScore / Math.max(1, totalMoves * 0.25));
+
+  // Exploration breadth: unique cells as fraction of grid
+  const explorationBreadth = moveBehavior.uniquePositions.size / 64;
+
+  // Pace: moves per minute since walk start
+  const elapsedMin = (Date.now() - walk.startTime) / 60000;
+  const pace = elapsedMin > 0 ? totalMoves / elapsedMin : 0;
+  const paceRapid = pace > 16;
+
+  // Direction stability
+  const dirStability = 1 - Math.min(1, moveBehavior.dirChanges / Math.max(1, totalMoves));
+
+  // Narrow movement: stayed in a small spatial footprint
+  const positions = [...moveBehavior.uniquePositions].map(k => k.split(',').map(Number));
+  let narrowMovement = false;
+  if (positions.length >= 4) {
+    const rows = positions.map(([r]) => r);
+    const cols = positions.map(([, c]) => c);
+    const spread = (Math.max(...rows) - Math.min(...rows)) + (Math.max(...cols) - Math.min(...cols));
+    narrowMovement = spread <= 4;
+  }
+
+  return { dominantTile, secondTile, tileInfluence, loopTendency,
+           explorationBreadth, paceRapid, dirStability, narrowMovement, totalMoves };
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DUNGEON CONTENT DATABASE  (the heart of v20)
+// ═══════════════════════════════════════════════════════════
+const DC = {
+
+  // ── Atmospheric opening lines (arrays of 2-3 lines, shown sequentially) ──
+  openings: {
+    W: [
+      ["Something here moves at a different speed.",
+       "The spacing between things is longer than you'd expect.",
+       "Distance accumulates before you notice."],
+      ["Slower than expected.",
+       "The corridor breathes.",
+       "Not at your rhythm."],
+      ["The pressure here doesn't arrive cleanly.",
+       "It approaches from a distance.",
+       "Then closer than it seemed."],
+    ],
+    P: [
+      ["It's quieter than somewhere like this should be.",
+       "The pressure doesn't announce itself.",
+       "Something has been waiting here longer than you have."],
+      ["The space between threats feels almost generous.",
+       "That's not reassurance.",
+       "It grows inward."],
+      ["Overgrown. Half-remembered.",
+       "The architecture is soft here.",
+       "Soft doesn't mean safe."],
+    ],
+    U: [
+      ["No space to settle.",
+       "It was already moving when you arrived.",
+       "The interval between things here is very short."],
+      ["Compressed. Everything adjacent to something else.",
+       "No margin.",
+       "You feel it before you process it."],
+      ["The timing here is relentless.",
+       "That's not accidental.",
+       "That's the design."],
+    ],
+    I: [
+      ["Regular. Consistent. That's the pressure.",
+       "Something here operates on a schedule.",
+       "It predates you."],
+      ["The rhythm here isn't yours.",
+       "Mechanical. Indifferent.",
+       "It doesn't adjust."],
+      ["Structured. Sequential.",
+       "The pattern is constraint.",
+       "You'll find its edges eventually."],
+    ],
+  },
+
+  // ── Behavioral opening modifiers (injected based on movement profile) ──
+  behavioralOpenings: {
+    loop:    ["The geometry here folds.", "You've been at junctions like this before."],
+    narrow:  ["The corridor fits.", "There isn't room to move differently."],
+    broad:   ["It opens further than expected.", "More routes than you anticipated."],
+    rapid:   ["It doesn't wait."],
+    erratic: ["The branching here isn't stable.", "Routes shift as you move through them."],
+  },
+
+  // ── Encounter descriptions by tile type ──
+  encounters: {
+    W: [
+      "The approach takes longer than it should.",
+      "A pressure point. Further out than expected.",
+      "It surfaces slowly. That's not comfort.",
+      "The corridor widens. Nothing fills it immediately.",
+      "Distance between things. Then suddenly not.",
+    ],
+    P: [
+      "Movement at the edge of the space. Unhurried.",
+      "Something that was resting. It isn't now.",
+      "Pressure from an unexpected direction — soft, then not.",
+      "A junction. One way feels more familiar.",
+      "The open space was cover for something.",
+    ],
+    U: [
+      "Immediate. No introduction.",
+      "Another before the last one clears.",
+      "Tight corridor. No sidestep.",
+      "Two pressures at once. The geometry doesn't help.",
+      "It knows this spacing better than you do.",
+    ],
+    I: [
+      "On schedule. That's the problem.",
+      "A pattern you could read. The pattern knows you can.",
+      "Linear approach. No variation.",
+      "The rhythm was a trap.",
+      "Regular. Until it wasn't.",
+    ],
+  },
+
+  // ── Companion lines by tile type (6+ each, observant not psychoanalytic) ──
+  companion: {
+    W: [
+      "You move faster through still spaces.",
+      "This route curves. You've walked curves like this before.",
+      "The pressure here drifts. It doesn't rush.",
+      "Distance comes easier here than you'd expect.",
+      "You rarely stop in places like this.",
+      "The echo here has a rhythm. You brought it.",
+      "Something in how you move fits this.",
+      "The pauses here don't seem to cost you much.",
+    ],
+    P: [
+      "You rarely stay in one place for long.",
+      "The space adjusts to you. Slowly.",
+      "You tend to keep moving through open areas.",
+      "Something about how you walk reads here.",
+      "This pace — you've moved at something like it.",
+      "You move through calm like you're looking for the edge of it.",
+      "The spacing here matches something.",
+      "You've been through routes like this. Different names.",
+    ],
+    U: [
+      "You move faster through dense areas.",
+      "You don't hesitate in tight spaces.",
+      "The density here isn't accidental.",
+      "You've crossed corridors like this before.",
+      "You rarely backtrack in confined spaces.",
+      "The pressure here suits your cadence.",
+      "You move like someone who's learned to read density.",
+      "Compressed routes. You've been building tolerance for them.",
+    ],
+    I: [
+      "Your movement has a rhythm. This place found it.",
+      "You don't deviate much from a line you've set.",
+      "The pattern here matches something in how you move.",
+      "You follow structures when you find them.",
+      "The regularity isn't comfort. But you don't fight it.",
+      "You move at a consistent pace through hard terrain.",
+      "This place built itself around a cadence. Close to yours.",
+      "You've held a line like this before.",
+    ],
+  },
+
+  // ── Recognition moments — the "wait, that feels familiar" beat ──
+  recognition: {
+    loop: {
+      encounter: "The route folds back. A junction you've already passed — different name, same geometry.",
+      companion: "You've crossed routes like this before. More than once on this walk.",
+    },
+    narrow: {
+      encounter: "The corridor narrows further. Your movement pattern fits it exactly.",
+      companion: "The space closed around how you move. You brought the geometry here.",
+    },
+    rapid: {
+      encounter: "The next encounter arrives before the last clears. The timing is yours.",
+      companion: "You move fast through dense spaces. This place clocked it.",
+    },
+    broad: {
+      encounter: "The route branches again — further than expected. You take the branch.",
+      companion: "You always take the branch. This place anticipated that.",
+    },
+    water: {
+      encounter: "A long stretch before the next pressure point. The spacing is what you've been walking through.",
+      companion: "The drift here — it matches the way you've been moving out there.",
+    },
+    urban: {
+      encounter: "No room. No pause. The cadence you've been moving at, reflected back.",
+      companion: "You built a tolerance for this pace out there. Before this.",
+    },
+    industrial: {
+      encounter: "The same rhythm as before. The same cadence as the terrain you've been crossing.",
+      companion: "The regularity here — you already know it. From somewhere.",
+    },
+    park: {
+      encounter: "An open stretch. Quieter than it should be. Like where you've been walking.",
+      companion: "The spacing here — you've been walking something like it. You didn't notice.",
+    },
+  },
+
+  // ── Dungeon feel labels (for header — never reveal tile type) ──
+  feelLabels: {
+    W: 'Deep passage',
+    P: 'Overgrown transit',
+    U: 'Dense corridor',
+    I: 'Structural zone',
+  },
+
+  // ── Anomaly descriptions (dungeon resolution threat text) ──
+  threats: {
+    W: 'The anomaly has settled in deep corridor space. Pressure is building slowly — the approach window is longer than usual, but the source is more diffuse.',
+    P: 'An anomalous cluster formed in a soft zone. It\'s quiet — not dormant. The threat is patient and lateral.',
+    U: 'Dense pressure spike. The anomaly formed fast in a compressed section. Timing is narrow.',
+    I: 'Systematic failure pattern. The anomaly is operating rhythmically — structured, predictable in its timing, hard to interrupt.',
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
+//  DUNGEON GENERATION  (new in v20)
+// ═══════════════════════════════════════════════════════════
+function generateDungeon(profile) {
+  const { dominantTile, secondTile, tileInfluence,
+          loopTendency, explorationBreadth, paceRapid,
+          dirStability, narrowMovement } = profile;
+
+  // 1. Opening lines (based on tile type, with behavioral injection)
+  const openingPool = DC.openings[dominantTile];
+  const openingBase = [...openingPool[Math.floor(Math.random() * openingPool.length)]];
+
+  let behaviorTag = null;
+  if (loopTendency > 0.4)       behaviorTag = 'loop';
+  else if (narrowMovement)       behaviorTag = 'narrow';
+  else if (explorationBreadth > 0.38) behaviorTag = 'broad';
+  else if (paceRapid)            behaviorTag = 'rapid';
+  else if (dirStability < 0.35)  behaviorTag = 'erratic';
+
+  const openingLines = [...openingBase];
+  if (behaviorTag && DC.behavioralOpenings[behaviorTag] && Math.random() < 0.65) {
+    const bOpts = DC.behavioralOpenings[behaviorTag];
+    openingLines[openingLines.length - 1] = bOpts[Math.floor(Math.random() * bOpts.length)];
+  }
+
+  // 2. Encounter sequence (4 encounters)
+  const pool = [...DC.encounters[dominantTile]].sort(() => Math.random() - 0.5);
+  const encounters = pool.slice(0, 4);
+
+  // 3. Companion lines (one per encounter)
+  const compPool = [...DC.companion[dominantTile]].sort(() => Math.random() - 0.5);
+  const companionLines = compPool.slice(0, 4);
+
+  // 4. Recognition moment — pick most behavior-specific
+  let recKey;
+  if (loopTendency > 0.45)        recKey = 'loop';
+  else if (narrowMovement)         recKey = 'narrow';
+  else if (paceRapid)              recKey = 'rapid';
+  else if (explorationBreadth > 0.42) recKey = 'broad';
+  else recKey = { W:'water', P:'park', U:'urban', I:'industrial' }[dominantTile];
+
+  const recognition = DC.recognition[recKey] || DC.recognition[{ W:'water',P:'park',U:'urban',I:'industrial' }[dominantTile]];
+  const recognitionIndex = 2; // fires at 3rd encounter
+
+  // 5. Pacing — delay before companion speaks and continue button appears
+  const basePacing = { W: 3600, P: 3000, U: 1500, I: 2300 }[dominantTile];
+  const pacingDelay = paceRapid ? Math.round(basePacing * 0.68) : basePacing;
+
+  // 6. Topology for node trail visual
+  let topology = 'linear';
+  if (loopTendency > 0.45)                         topology = 'recursive';
+  else if (explorationBreadth > 0.38 && !narrowMovement) topology = 'branching';
+  else if (narrowMovement)                           topology = 'narrow';
+
+  // 7. Dungeon accent color (subtle, not label)
+  const accentColor = { W:'#4a9ebb', P:'#5aae69', U:'#c8a944', I:'#c86040' }[dominantTile];
+
+  return {
+    openingLines, encounters, companionLines,
+    recognition, recognitionIndex,
+    pacingDelay, topology,
+    dominantTile, secondTile, behaviorTag,
+    feelLabel: DC.feelLabels[dominantTile],
+    accentColor,
+    threatText: DC.threats[dominantTile],
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DUNGEON FLOW STATE
+// ═══════════════════════════════════════════════════════════
+let dungeonPlan   = null;
+let dungeonStep   = 0;
+let dungeonTimers = [];
+
+function clearDungeonTimers() {
+  dungeonTimers.forEach(t => clearTimeout(t));
+  dungeonTimers = [];
+}
+
+function dt(fn, delay) {
+  const t = setTimeout(fn, delay);
+  dungeonTimers.push(t);
+  return t;
+}
+
+// ── TRIGGER (fires at ~90s, replaces old fireEscalation) ──
+function triggerDungeon() {
+  if (!walk.active || walk.interventionFired) return;
+  walk.interventionFired = true;
+  walk.active = false;
+  clearInterval(moveTimer);
+
+  // Place anomaly near player
+  const aRow = Math.min(G-1, Math.max(0, playerRow + (Math.random() < .5 ? 2 : -2)));
+  const aCol = Math.min(G-1, Math.max(0, playerCol + (Math.random() < .5 ? 1 : -1)));
+  walk.anomalyRow = aRow;
+  walk.anomalyCol = aCol;
+  const aEl = document.getElementById(`t${aRow}${aCol}`);
+  if (aEl) aEl.className = 'tile tile-anomaly';
+
+  addLine('Anomalous signature forming nearby. Pattern unstable — holding position.', 'escalation');
+
+  // Analyze movement and generate dungeon
+  const profile  = analyzeBehavior();
+  dungeonPlan    = generateDungeon(profile);
+  dungeonStep    = 0;
+
+  // Set dungeon accent
+  document.documentElement.style.setProperty('--d-accent', dungeonPlan.accentColor);
+
+  dt(startDungeonEntry, 2600);
+}
+
+// ── ENTRY PHASE ──
+function startDungeonEntry() {
+  const container = document.getElementById('dungeonEntryLines');
+  container.innerHTML = '';
+
+  document.getElementById('dentryMarker').textContent = dungeonPlan.feelLabel;
+  document.getElementById('dentryPhase').textContent  = '◈ ' + dungeonPlan.feelLabel.toUpperCase();
+  document.getElementById('dentryPhase').style.color  = dungeonPlan.accentColor;
+
+  show('screen-dungeon-entry');
+
+  dungeonPlan.openingLines.forEach((line, i) => {
+    dt(() => {
+      const div = document.createElement('div');
+      div.className = 'dentry-line';
+      div.textContent = line;
+      container.appendChild(div);
+    }, i * 1500);
+  });
+
+  const totalDelay = dungeonPlan.openingLines.length * 1500 + 1800;
+  dt(startDungeonRun, totalDelay);
+}
+
+// ── RUN PHASE ──
+function startDungeonRun() {
+  // Header label
+  const phaseEl = document.getElementById('drunPhase');
+  phaseEl.textContent = '◈ ' + dungeonPlan.feelLabel.toUpperCase();
+  phaseEl.style.color = dungeonPlan.accentColor;
+
+  // Build node trail
+  buildNodeTrail();
+
+  // Clear encounter area
+  document.getElementById('dungeonEncounterText').textContent = '';
+  document.getElementById('dungeonCompanionEl').textContent   = '';
+  document.getElementById('dungeonCompanionEl').className     = 'dungeon-companion';
+  document.getElementById('dungeonContinueBtn').style.display = 'none';
+
+  dungeonStep = 0;
+  show('screen-dungeon-run');
+
+  dt(showEncounter, 900);
+}
+
+function buildNodeTrail() {
+  const trail    = document.getElementById('dungeonNodeTrail');
+  trail.innerHTML = '';
+  const totalNodes = 5; // 4 encounters + 1 anomaly node
+
+  for (let i = 0; i < totalNodes; i++) {
+    const node = document.createElement('div');
+    const isRec    = (i === dungeonPlan.recognitionIndex);
+    const isAnomaly = (i === totalNodes - 1);
+    let cls = 'dungeon-node';
+    if (isRec)     cls += ' node-recognition';
+    if (isAnomaly) cls += ' node-anomaly';
+    node.className = cls;
+    node.id = `dnode-${i}`;
+    trail.appendChild(node);
+
+    if (i < totalNodes - 1) {
+      const conn = document.createElement('div');
+      conn.className = `dungeon-connector topology-${dungeonPlan.topology}`;
+      conn.id = `dconn-${i}`;
+      trail.appendChild(conn);
+    }
+  }
+  updateNodeTrail(-1);
+}
+
+function updateNodeTrail(current) {
+  for (let i = 0; i < 5; i++) {
+    const node = document.getElementById(`dnode-${i}`);
+    if (!node) continue;
+    node.classList.remove('node-visited', 'node-current');
+    if (i < current)  node.classList.add('node-visited');
+    if (i === current) node.classList.add('node-current');
+    // Fade connector after node is visited
+    const conn = document.getElementById(`dconn-${i}`);
+    if (conn) {
+      conn.classList.toggle('node-visited-after', i < current);
+    }
+  }
+}
+
+function showEncounter() {
+  const isRec  = (dungeonStep === dungeonPlan.recognitionIndex);
+  const isDone = (dungeonStep >= dungeonPlan.encounters.length);
+
+  updateNodeTrail(dungeonStep);
+
+  const card     = document.getElementById('dungeonEncounterCard');
+  const textEl   = document.getElementById('dungeonEncounterText');
+  const compEl   = document.getElementById('dungeonCompanionEl');
+  const btn      = document.getElementById('dungeonContinueBtn');
+
+  compEl.textContent = '';
+  compEl.className   = 'dungeon-companion';
+  btn.style.display  = 'none';
+
+  if (isDone) {
+    // All encounters complete — show anomaly node and resolve button
+    updateNodeTrail(4);
+    card.className    = 'encounter-card';
+    textEl.textContent = 'The anomaly is ahead. The corridor is clear.';
+    dt(() => {
+      btn.textContent   = 'Assess anomaly →';
+      btn.className     = 'btn-dungeon-continue btn-dungeon-assess';
+      btn.style.display = 'block';
+    }, 1000);
+    return;
+  }
+
+  // Determine content
+  const encounterText = isRec
+    ? dungeonPlan.recognition.encounter
+    : dungeonPlan.encounters[dungeonStep];
+  const companionText = isRec
+    ? dungeonPlan.recognition.companion
+    : (dungeonPlan.companionLines[dungeonStep] || '');
+
+  // Render encounter
+  card.className     = isRec ? 'encounter-card recognition-moment' : 'encounter-card';
+  textEl.textContent = encounterText;
+
+  // Schedule companion line
+  dt(() => {
+    compEl.textContent = companionText;
+    compEl.className   = isRec ? 'dungeon-companion recognition-voice' : 'dungeon-companion';
+  }, dungeonPlan.pacingDelay);
+
+  // Schedule continue button
+  const continueDelay = dungeonPlan.pacingDelay + (isRec ? dungeonPlan.pacingDelay * 0.9 : dungeonPlan.pacingDelay * 0.65);
+  dt(() => {
+    btn.textContent   = 'Continue →';
+    btn.className     = 'btn-dungeon-continue';
+    btn.style.display = 'block';
+  }, continueDelay);
+}
+
+function advanceDungeon() {
+  clearDungeonTimers();
+  document.getElementById('dungeonContinueBtn').style.display = 'none';
+
+  dungeonStep++;
+
+  if (dungeonStep > dungeonPlan.encounters.length) {
+    openDungeonResolution();
+    return;
+  }
+
+  dt(showEncounter, 500);
+}
+
+// ── RESOLUTION PHASE ──
+function openDungeonResolution() {
+  document.getElementById('drThreatText').textContent    = dungeonPlan.threatText;
+  document.getElementById('drConstraintText').textContent = CONSTRAINTS[cfg.doctrine];
+
+  const isSup = cfg.doctrine === 'suppression';
+  const choices = [
+    {
+      id: 'engage', name: 'Engage', cls: 'choice-high',
+      meta: `High risk, high yield. Force direct resolution. ${isSup ? 'Suppression loadout reduces risk significantly.' : 'Your loadout is not optimized — outcome uncertain.'}`,
+    },
+    {
+      id: 'contain', name: 'Contain', cls: 'choice-mid',
+      meta: 'Stabilize the anomaly. Reduced pressure — corridor remains viable.',
+    },
+    {
+      id: 'withdraw', name: 'Withdraw', cls: 'choice-safe',
+      meta: 'Safe retreat. The anomaly persists. Yield from this corridor penalized.',
+    },
+  ];
+
+  const container = document.getElementById('drChoiceBtns');
+  container.innerHTML = '';
+  choices.forEach(ch => {
+    const btn = document.createElement('button');
+    btn.className = `choice-btn ${ch.cls}`;
+    btn.innerHTML = `<div class="choice-name">${ch.name}</div><div class="choice-meta">${ch.meta}</div>`;
+    btn.onclick = () => resolveDungeon(ch.id);
+    container.appendChild(btn);
+  });
+
+  show('screen-dungeon-resolution');
+}
+
+function resolveDungeon(choice) {
+  walk.interventionChoice = choice;
+  const isSup = cfg.doctrine === 'suppression';
+
+  let banner, bannerClass, logLines;
+
+  if (choice === 'engage') {
+    if (isSup) {
+      banner = 'Anomaly Collapsed — Zone Stabilized';
+      bannerClass = 'outcome-success';
+      logLines = [
+        ['Suppression doctrine engaged at full effectiveness.', 'good'],
+        ['Anomaly core disrupted. Residue cleared from adjacent cells.', 'good'],
+        ['Territory integrity restored. Signal yield in corridor increased.', 'good'],
+        ['Your loadout was right for this.', ''],
+      ];
+      walk.mapEffect = 'stabilized';
+    } else {
+      banner = 'Partial Disruption — Network Unstable';
+      bannerClass = 'outcome-partial';
+      logLines = [
+        ['Anomaly partially disrupted. Doctrine mismatch created blowback.', 'warn'],
+        ['Two adjacent cells remain under elevated pressure.', 'warn'],
+        ['Signal yield variance increased in this zone.', ''],
+        ['The corridor is passable. The anomaly is not resolved.', 'bad'],
+      ];
+      walk.mapEffect = 'partial';
+    }
+  } else if (choice === 'contain') {
+    banner = isSup ? 'Contained — Pressure Reduced' : 'Holding — Barely Stable';
+    bannerClass = isSup ? 'outcome-success' : 'outcome-partial';
+    logLines = [
+      [isSup ? 'Suppression doctrine contained the anomaly efficiently.' : 'Containment established. Pressure partially suppressed.', isSup ? 'good' : 'warn'],
+      ['Zone is no longer escalating. Corridor stable for now.', ''],
+      [isSup ? 'Residue sealed. No yield penalty.' : 'Yield from this corridor reduced by 20%.', isSup ? 'good' : 'warn'],
+      ['Continue walk. Monitor this corridor on return.', ''],
+    ];
+    walk.mapEffect = 'contained';
+  } else {
+    banner = 'Withdrawn — Anomaly Persists';
+    bannerClass = 'outcome-fail';
+    logLines = [
+      ['Disengaged safely. No damage taken.', ''],
+      ['Anomaly remains active in this corridor.', 'bad'],
+      ['Yield from this zone penalized until resolved.', 'bad'],
+      ['Threat will compound if not addressed in a future walk.', 'warn'],
+    ];
+    walk.mapEffect = 'worsened';
+  }
+
+  if (walk.anomalyRow >= 0) {
+    TM.markIntervention(walk.anomalyRow, walk.anomalyCol, walk.mapEffect);
+  }
+
+  // Apply map consequence
+  if (walk.anomalyRow >= 0) {
+    const r = walk.anomalyRow, c = walk.anomalyCol;
+    const el = document.getElementById(`t${r}${c}`);
+    if (el) {
+      if (walk.mapEffect === 'stabilized') {
+        walk.anomalyRow = -1; walk.anomalyCol = -1;
+        renderTile(r, c);
+        walk.signal += 18;
+      } else if (walk.mapEffect === 'contained') {
+        walk.anomalyRow = -1; walk.anomalyCol = -1;
+        el.className = 'tile tile-building tenv-' + TENV[r][c];
+        walk.signal += 8;
+      } else if (walk.mapEffect === 'partial') {
+        el.className = 'tile tile-anomaly';
+        el.style.opacity = '.55';
+      } else {
+        el.className = 'tile tile-anomaly';
+        el.style.boxShadow = '0 0 14px rgba(247,129,102,.45)';
+      }
+    }
+  }
+
+  const bEl = document.getElementById('outcomeBanner');
+  bEl.className = `outcome-banner ${bannerClass}`;
+  document.getElementById('outcomeTitle').textContent = banner;
+  document.getElementById('outcomeSub').textContent   = 'Resolved — return to walk when ready.';
+
+  const log = document.getElementById('outcomeLog');
+  log.innerHTML = '';
+  logLines.forEach(([text, cls]) => {
+    const d = document.createElement('div');
+    d.className = `olog-line ${cls}`;
+    d.textContent = text;
+    log.appendChild(d);
+  });
+
+  show('screen-outcome');
+}
+
+function returnToWalk() {
+  walk.active = true;
+  moveTimer = setInterval(movePlayer, 2200);
+
+  const returnLines = {
+    stabilized: 'Something settled back there. You can feel it.',
+    contained:  'It stopped moving. That might hold.',
+    partial:    "It's quieter. Not quiet.",
+    worsened:   "You left something open. It'll still be there.",
+  };
+  const line = returnLines[walk.mapEffect];
+  if (line) addLine(line, 'advisory');
+
+  // Restore walk accent
+  document.documentElement.style.setProperty('--d-accent', '#00d4ff');
+  show('screen-walk');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  COMPANION OBSERVATIONS  (walk phase)
+// ═══════════════════════════════════════════════════════════
 const OBS = {
   returning_short: [
     "Something shifted while you were gone. Not dramatically. Just differently.",
@@ -810,12 +1753,6 @@ const OBS = {
   ],
 };
 
-const ESCALATION = [
-  'Containment failure imminent. Anomaly forming nearby.',
-  'Unstable cluster detected. Intervention window open.',
-];
-
-// Per-walk observation state (rate-limiting)
 const companion = {
   sessionObsFired: false,
   tileObsCount:    0,
@@ -825,29 +1762,81 @@ const companion = {
   walkStartTime:   0,
 };
 
-// ═══════════════════════════════════════════════════
+function scheduleCompanion() {
+  const p = cfg.posture;
+  if (p !== 'silent') setTimeout(fireSessionObservation, 12000);
+  if (p === 'active' || p === 'tactical') {
+    setTimeout(() => { if (companion.tileObsCount < 1) fireAmbient(); }, 185000);
+  }
+  dungeonEscalationTimer = setTimeout(triggerDungeon, 90000);
+}
+
+function fireSessionObservation() {
+  if (!walk.active || companion.sessionObsFired) return;
+  const gap = TM.sessionGap();
+  if (!gap || gap === 0) return;
+  companion.sessionObsFired = true;
+  const pool = gap >= 3 ? OBS.returning_long : OBS.returning_short;
+  addLine(pickFresh(pool, companion.lastLine), 'advisory');
+}
+
+function fireTileObservation(r, c) {
+  if (!walk.active) return;
+  if (companion.tileObsCount >= 2) return;
+  const now = Date.now();
+  if (now - companion.walkStartTime < 20000) return;
+  if (now - companion.lastObsTime   < 30000) return;
+  const tile = TM.getTile(r, c);
+  if (!tile) return;
+  const gap = TM.daysSinceVisit(r, c);
+  let pool = null;
+  if (tile.interventionEffect && Math.random() < 0.45) pool = OBS.intervention_memory;
+  else if (gap !== null && gap >= 3 && tile.sessionCount >= 2) pool = OBS.neglected_tile;
+  else if (tile.stabilityScore < 0.45 && Math.random() < 0.4) pool = OBS.instability;
+  else if (tile.sessionCount >= 4 && Math.random() < 0.3) pool = OBS.deep_familiar;
+  if (!pool) return;
+  const line = pickFresh(pool, companion.lastLine);
+  companion.tileObsCount++;
+  companion.lastObsTime = now;
+  addLine(line, 'advisory');
+}
+
+function fireAmbient() {
+  if (!walk.active || companion.ambientFired) return;
+  companion.ambientFired = true;
+  addLine(pickFresh(OBS.ambient, companion.lastLine), 'passive');
+}
+
+function addLine(text, type) {
+  const feed = document.getElementById('companionFeed');
+  while (feed.children.length >= 3) feed.removeChild(feed.firstChild);
+  const div = document.createElement('div');
+  div.className = `companion-line ${type === 'advisory' ? 'advisory' : type === 'escalation' ? 'escalation' : ''}`;
+  div.textContent = text;
+  feed.appendChild(div);
+  companion.lastLine = text;
+}
+
+// ═══════════════════════════════════════════════════════════
 //  SCREEN ROUTING
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  START WALK
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 function startWalk() {
   if (!cfg.doctrine || !cfg.posture || !cfg.objective) return;
 
-  // Load territory memory and apply daily decay
   TM.load();
   TM.applyDecay();
 
-  // Reset tile grid
   tileCounts = Array.from({ length: G }, () => new Array(G).fill(0));
   playerRow = 3; playerCol = 3;
 
-  // Reset walk state
   walk.active = true;
   walk.startTime = Date.now();
   walk.signal = 0;
@@ -859,7 +1848,8 @@ function startWalk() {
   walk.anomalyCol = -1;
   walk.mapEffect = null;
 
-  // Reset companion rate-limiter
+  resetMoveBehavior();
+
   companion.sessionObsFired = false;
   companion.tileObsCount    = 0;
   companion.ambientFired    = false;
@@ -869,42 +1859,37 @@ function startWalk() {
 
   TM.startSession();
 
-  // Context chips
   const DOCTRINE_LABELS = { salvage:'Salvage', harvest:'Signal Harvest', suppression:'Suppression', recon:'Recon' };
   const POSTURE_LABELS  = { silent:'Silent', ambient:'Ambient', active:'Active', tactical:'Tactical' };
   document.getElementById('ctxDoctrine').textContent = DOCTRINE_LABELS[cfg.doctrine];
   document.getElementById('ctxPosture').textContent  = POSTURE_LABELS[cfg.posture];
   document.getElementById('ctxObj').textContent      = cfg.objective === 'familiar' ? 'Familiar' : 'New Territory';
 
-  // Build grid DOM
   const grid = document.getElementById('walkGrid');
   grid.innerHTML = '';
   for (let r = 0; r < G; r++) {
     for (let c = 0; c < G; c++) {
       const div = document.createElement('div');
-      div.className = 'tile tile-unvisited';
+      div.className = `tile tile-unvisited tenv-${TENV[r][c]}`;
       div.id = `t${r}${c}`;
       grid.appendChild(div);
     }
   }
 
-  // Visit starting tile
   visitTile(playerRow, playerCol);
   markPlayer();
 
   show('screen-walk');
   updateStats();
 
-  // Timers
-  // NOTE: these are prototype-compressed timings. Real game would use real GPS cadence.
   moveTimer  = setInterval(movePlayer, 2200);
   clockTimer = setInterval(tickClock, 1000);
   scheduleCompanion();
 }
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  TILE MANAGEMENT
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 function visitTile(r, c) {
   tileCounts[r][c]++;
   const count = tileCounts[r][c];
@@ -917,40 +1902,45 @@ function visitTile(r, c) {
     walk.newTiles.add(key);
   }
 
-  // Signal yield: familiar tiles produce more concentrated yield
   walk.signal += count >= 5 ? 3 : count >= 3 ? 2 : 1;
   renderTile(r, c);
 
-  // Territory memory: update historical state and maybe observe
   TM.markVisited(r, c);
-  // Only check on first visit to a tile this session; sparse random gate
   if (count === 1 && Math.random() < 0.18) fireTileObservation(r, c);
+
+  // Update zone chip
+  const type = TENV[r][c];
+  const zoneEl = document.getElementById('ctxZone');
+  if (zoneEl) {
+    zoneEl.textContent = TENV_NAMES[type];
+    zoneEl.className = `ctx-chip chip-zone zone-${type}`;
+  }
 }
 
 function renderTile(r, c) {
   const el = document.getElementById(`t${r}${c}`);
   if (!el) return;
-  const count = tileCounts[r][c];
-  const isPlayer  = (r === playerRow && c === playerCol);
+  const count    = tileCounts[r][c];
+  const isPlayer = (r === playerRow && c === playerCol);
   const isAnomaly = (r === walk.anomalyRow && c === walk.anomalyCol);
+  const envClass = `tenv-${TENV[r][c]}`;
 
-  el.className = 'tile';
-  if      (isAnomaly)     el.classList.add('tile-anomaly');
-  else if (count === 0)   el.classList.add('tile-unvisited');
-  else if (count === 1)   el.classList.add('tile-new1');
-  else if (count === 2)   el.classList.add('tile-new2');
-  else if (count <= 4)    el.classList.add('tile-building');
-  else if (count <= 7)    el.classList.add('tile-familiar');
-  else if (count <= 12)   el.classList.add('tile-deep');
-  else                    el.classList.add('tile-entrenched');
+  el.className = `tile ${envClass}`;
+
+  if      (isAnomaly) el.classList.add('tile-anomaly');
+  else if (count === 0) el.classList.add('tile-unvisited');
+  else if (count === 1) el.classList.add('tile-new1');
+  else if (count === 2) el.classList.add('tile-new2');
+  else if (count <= 4)  el.classList.add('tile-building');
+  else if (count <= 7)  el.classList.add('tile-familiar');
+  else if (count <= 12) el.classList.add('tile-deep');
+  else                  el.classList.add('tile-entrenched');
 
   if (isPlayer) el.classList.add('tile-player');
 }
 
 function markPlayer() {
-  document.querySelectorAll('.tile-player').forEach(t => {
-    t.classList.remove('tile-player');
-  });
+  document.querySelectorAll('.tile-player').forEach(t => t.classList.remove('tile-player'));
   const el = document.getElementById(`t${playerRow}${playerCol}`);
   if (el) el.classList.add('tile-player');
 }
@@ -968,17 +1958,17 @@ function tickClock() {
   document.getElementById('wTime').textContent = `${m}:${String(s % 60).padStart(2, '0')}`;
 }
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  PLAYER MOVEMENT
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 function movePlayer() {
   if (!walk.active) return;
 
   const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
   const candidates = dirs
-    .map(([dr,dc]) => ({ r: playerRow+dr, c: playerCol+dc }))
-    .filter(({ r,c }) => r >= 0 && r < G && c >= 0 && c < G)
-    .map(({ r,c }) => ({ r, c, count: tileCounts[r][c] }));
+    .map(([dr, dc]) => ({ r: playerRow+dr, c: playerCol+dc }))
+    .filter(({ r, c }) => r >= 0 && r < G && c >= 0 && c < G)
+    .map(({ r, c }) => ({ r, c, count: tileCounts[r][c] }));
 
   let chosen;
   if (cfg.objective === 'new') {
@@ -995,6 +1985,7 @@ function movePlayer() {
     else chosen = pick(candidates);
   }
 
+  trackMove(chosen.r, chosen.c);
   playerRow = chosen.r;
   playerCol = chosen.c;
   visitTile(chosen.r, chosen.c);
@@ -1008,279 +1999,9 @@ function pickFresh(arr, exclude) {
   return (available.length ? available : arr)[Math.floor(Math.random() * (available.length || arr.length))];
 }
 
-// ═══════════════════════════════════════════════════
-//  COMPANION SYSTEM
-// ═══════════════════════════════════════════════════
-function scheduleCompanion() {
-  const p = cfg.posture;
-
-  // Session-level observation: fires once, ~12s in, if player is returning after a gap
-  if (p !== 'silent') setTimeout(fireSessionObservation, 12000);
-
-  // Ambient fallback: fires once at ~3 min if barely anything else has fired
-  if (p === 'active' || p === 'tactical') {
-    setTimeout(() => { if (companion.tileObsCount < 1) fireAmbient(); }, 185000);
-  }
-
-  // Escalation fires once at ~90s (prototype timing; real game is event-driven)
-  escalationTimer = setTimeout(fireEscalation, 90000);
-}
-
-// Fires once per walk if returning after a day or more
-function fireSessionObservation() {
-  if (!walk.active || companion.sessionObsFired) return;
-  const gap = TM.sessionGap();
-  if (!gap || gap === 0) return;  // same-day restart or first ever session — nothing to say
-  companion.sessionObsFired = true;
-  const pool = gap >= 3 ? OBS.returning_long : OBS.returning_short;
-  addLine(pickFresh(pool, companion.lastLine), 'advisory');
-}
-
-// Fires when visiting a tile with meaningful history; budget 2 per walk
-function fireTileObservation(r, c) {
-  if (!walk.active) return;
-  if (companion.tileObsCount >= 2) return;
-
-  const now = Date.now();
-  // Don't fire in the first 20s or within 30s of the last observation
-  if (now - companion.walkStartTime < 20000) return;
-  if (now - companion.lastObsTime   < 30000) return;
-
-  const tile = TM.getTile(r, c);
-  if (!tile) return;  // never visited in a prior session — nothing to recall
-
-  const gap = TM.daysSinceVisit(r, c);
-
-  // Pick observation type by priority
-  let pool = null;
-  if (tile.interventionEffect && Math.random() < 0.45) {
-    pool = OBS.intervention_memory;
-  } else if (gap !== null && gap >= 3 && tile.sessionCount >= 2) {
-    pool = OBS.neglected_tile;
-  } else if (tile.stabilityScore < 0.45 && Math.random() < 0.4) {
-    pool = OBS.instability;
-  } else if (tile.sessionCount >= 4 && Math.random() < 0.3) {
-    pool = OBS.deep_familiar;
-  }
-
-  if (!pool) return;
-
-  const line = pickFresh(pool, companion.lastLine);
-  companion.tileObsCount++;
-  companion.lastObsTime = now;
-  addLine(line, 'advisory');
-}
-
-// Quiet ambient fallback for very sparse walks
-function fireAmbient() {
-  if (!walk.active || companion.ambientFired) return;
-  companion.ambientFired = true;
-  addLine(pickFresh(OBS.ambient, companion.lastLine), 'passive');
-}
-
-function fireEscalation() {
-  if (!walk.active || walk.interventionFired) return;
-  walk.interventionFired = true;
-
-  addLine(ESCALATION[Math.floor(Math.random() * ESCALATION.length)], 'escalation');
-
-  // Place anomaly 2 cells from player
-  const aRow = Math.min(G-1, Math.max(0, playerRow + (Math.random() < .5 ? 2 : -2)));
-  const aCol = Math.min(G-1, Math.max(0, playerCol + (Math.random() < .5 ? 1 : -1)));
-  walk.anomalyRow = aRow;
-  walk.anomalyCol = aCol;
-
-  const anomTile = document.getElementById(`t${aRow}${aCol}`);
-  if (anomTile) {
-    anomTile.className = 'tile tile-anomaly';
-  }
-
-  // Pause movement and open intervention after a brief beat
-  clearInterval(moveTimer);
-  walk.active = false;
-  setTimeout(openIntervention, 2800);
-}
-
-function addLine(text, type) {
-  const feed = document.getElementById('companionFeed');
-  while (feed.children.length >= 3) feed.removeChild(feed.firstChild);
-
-  const div = document.createElement('div');
-  div.className = `companion-line ${type === 'advisory' ? 'advisory' : type === 'escalation' ? 'escalation' : ''}`;
-  div.textContent = text;
-  feed.appendChild(div);
-}
-
-// ═══════════════════════════════════════════════════
-//  INTERVENTION
-// ═══════════════════════════════════════════════════
-const THREATS = [
-  'An anomalous signal cluster has formed two blocks from your current position. Residue destabilizing — two cells at risk of corruption. The intervention window is open now.',
-  'A synchronized pressure spike has formed in an adjacent corridor. Unstable resonance pattern building. If left unaddressed, the zone becomes permanently compromised.',
-];
-
-const CONSTRAINTS = {
-  salvage:     'Your loadout is configured for recovery operations. Salvage doctrine has limited active suppression — containment will be resource-costly.',
-  harvest:     'Your loadout prioritizes yield extraction. Signal Harvest doctrine is not optimized for anomaly containment.',
-  suppression: 'Suppression doctrine active. Your loadout is well-matched to this threat type. Engagement risk is substantially reduced.',
-  recon:       'Recon doctrine is not configured for active intervention. You have limited containment capability with this loadout.',
-};
-
-function openIntervention() {
-  document.getElementById('threatDesc').textContent    = THREATS[Math.floor(Math.random() * THREATS.length)];
-  document.getElementById('constraintText').textContent = CONSTRAINTS[cfg.doctrine];
-
-  const isSuppression = cfg.doctrine === 'suppression';
-
-  const choices = [
-    {
-      id:   'engage',
-      name: 'Engage',
-      meta: `High risk, high reward. Force direct resolution. ${isSuppression ? 'Suppression loadout reduces risk significantly.' : 'Your loadout is not optimized for this — outcome uncertain.'}`,
-      cls:  'choice-high',
-    },
-    {
-      id:   'contain',
-      name: 'Contain',
-      meta: 'Moderate effort. Stabilize the anomaly and continue walk with reduced corridor pressure.',
-      cls:  'choice-mid',
-    },
-    {
-      id:   'withdraw',
-      name: 'Withdraw',
-      meta: 'Safe retreat. The anomaly persists. Yield from this corridor is penalized.',
-      cls:  'choice-safe',
-    },
-  ];
-
-  const container = document.getElementById('choiceBtns');
-  container.innerHTML = '';
-  choices.forEach(ch => {
-    const btn = document.createElement('button');
-    btn.className = `choice-btn ${ch.cls}`;
-    btn.innerHTML = `<div class="choice-name">${ch.name}</div><div class="choice-meta">${ch.meta}</div>`;
-    btn.onclick = () => resolveIntervention(ch.id);
-    container.appendChild(btn);
-  });
-
-  show('screen-intervention');
-}
-
-function resolveIntervention(choice) {
-  walk.interventionChoice = choice;
-  const isSuppression = cfg.doctrine === 'suppression';
-
-  let banner, bannerClass, logLines;
-
-  if (choice === 'engage') {
-    if (isSuppression) {
-      banner      = 'Anomaly Collapsed — Zone Stabilized';
-      bannerClass = 'outcome-success';
-      logLines    = [
-        ['Suppression doctrine engaged at full effectiveness.', 'good'],
-        ['Anomaly core disrupted. Residue cleared from adjacent cells.', 'good'],
-        ['Territory integrity restored. Signal yield in corridor increased.', 'good'],
-        ['Your loadout was right for this.', ''],
-      ];
-      walk.mapEffect = 'stabilized';
-    } else {
-      banner      = 'Partial Disruption — Network Unstable';
-      bannerClass = 'outcome-partial';
-      logLines    = [
-        ['Anomaly partially disrupted. Doctrine mismatch created blowback.', 'warn'],
-        ['Two adjacent cells remain under elevated pressure.', 'warn'],
-        ['Signal yield variance increased in this zone.', ''],
-        ['The corridor is passable. The anomaly is not resolved.', 'bad'],
-      ];
-      walk.mapEffect = 'partial';
-    }
-  } else if (choice === 'contain') {
-    banner      = isSuppression ? 'Contained — Pressure Reduced' : 'Holding — Barely Stable';
-    bannerClass = isSuppression ? 'outcome-success' : 'outcome-partial';
-    logLines    = [
-      [isSuppression ? 'Suppression doctrine contained the anomaly efficiently.' : 'Containment established. Pressure partially suppressed.', isSuppression ? 'good' : 'warn'],
-      ['Zone is no longer escalating. Corridor stable for now.', ''],
-      [isSuppression ? 'Residue sealed. No yield penalty.' : 'Yield from this corridor reduced by 20%.', isSuppression ? 'good' : 'warn'],
-      ['Continue walk. Monitor this corridor on return.', ''],
-    ];
-    walk.mapEffect = 'contained';
-  } else {
-    banner      = 'Withdrawn — Anomaly Persists';
-    bannerClass = 'outcome-fail';
-    logLines    = [
-      ['Disengaged safely. No damage taken.', ''],
-      ['Anomaly remains active in this corridor.', 'bad'],
-      ['Yield from this zone penalized until resolved.', 'bad'],
-      ['Threat will compound if not addressed in a future walk.', 'warn'],
-    ];
-    walk.mapEffect = 'worsened';
-  }
-
-  // Record intervention in territory memory
-  if (walk.anomalyRow >= 0) {
-    TM.markIntervention(walk.anomalyRow, walk.anomalyCol, walk.mapEffect);
-  }
-
-  // Apply map consequence to anomaly tile
-  if (walk.anomalyRow >= 0) {
-    const r = walk.anomalyRow, c = walk.anomalyCol;
-    const el = document.getElementById(`t${r}${c}`);
-    if (el) {
-      if (walk.mapEffect === 'stabilized') {
-        walk.anomalyRow = -1; walk.anomalyCol = -1;
-        renderTile(r, c);
-        walk.signal += 18;
-      } else if (walk.mapEffect === 'contained') {
-        walk.anomalyRow = -1; walk.anomalyCol = -1;
-        el.className = 'tile tile-building';
-        walk.signal += 8;
-      } else if (walk.mapEffect === 'partial') {
-        el.className = 'tile tile-anomaly';
-        el.style.opacity = '.55';
-      } else {
-        el.className = 'tile tile-anomaly';
-        el.style.boxShadow = '0 0 14px rgba(247,129,102,.45)';
-      }
-    }
-  }
-
-  // Render outcome screen
-  const bEl = document.getElementById('outcomeBanner');
-  bEl.className = `outcome-banner ${bannerClass}`;
-  document.getElementById('outcomeTitle').textContent = banner;
-  document.getElementById('outcomeSub').textContent   = 'Intervention resolved — return to walk when ready.';
-
-  const log = document.getElementById('outcomeLog');
-  log.innerHTML = '';
-  logLines.forEach(([text, cls]) => {
-    const d = document.createElement('div');
-    d.className = `olog-line ${cls}`;
-    d.textContent = text;
-    log.appendChild(d);
-  });
-
-  show('screen-outcome');
-}
-
-function returnToWalk() {
-  walk.active = true;
-  moveTimer = setInterval(movePlayer, 2200);
-
-  const returnLines = {
-    stabilized: 'Something settled back there. You can feel it.',
-    contained:  'It stopped moving. That might hold.',
-    partial:    "It's quieter. Not quiet.",
-    worsened:   "You left something open. It'll still be there.",
-  };
-  const returnLine = returnLines[walk.mapEffect];
-  if (returnLine) addLine(returnLine, 'advisory');
-
-  show('screen-walk');
-}
-
-// ═══════════════════════════════════════════════════
-//  CHECK YIELD (mid-walk)
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+//  CHECK YIELD  (mid-walk)
+// ═══════════════════════════════════════════════════════════
 const RESIDUE = {
   salvage:     'construction fragment',
   harvest:     'dense signal residue',
@@ -1291,31 +2012,25 @@ const RESIDUE = {
 function checkYield() {
   const fam = walk.familiar.size;
   const nw  = walk.newTiles.size;
-
   if (fam === 0 && nw === 0) {
     addLine('Still accumulating. Keep moving — first tiles registering.', 'passive');
     return;
   }
-
   const lines = [];
-  if (fam > 0) {
-    lines.push(`Familiar routes (${fam} tiles): concentrated Signal + ${RESIDUE[cfg.doctrine]}.`);
-  }
-  if (nw > 0) {
-    lines.push(`New territory (${nw} tiles): variety Signal + discovery bonus (+${nw * 2} units).`);
-  }
-
+  if (fam > 0) lines.push(`Familiar routes (${fam} tiles): concentrated Signal + ${RESIDUE[cfg.doctrine]}.`);
+  if (nw  > 0) lines.push(`New territory (${nw} tiles): variety Signal + discovery bonus (+${nw * 2} units).`);
   lines.forEach(l => addLine(l, 'advisory'));
 }
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  END WALK → SUMMARY
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 function endWalk() {
   walk.active = false;
   clearInterval(moveTimer);
   clearInterval(clockTimer);
-  clearTimeout(escalationTimer);
+  clearTimeout(dungeonEscalationTimer);
+  clearDungeonTimers();
   TM.endSession();
 
   const fam = walk.familiar.size;
@@ -1326,7 +2041,6 @@ function endWalk() {
   document.getElementById('sumFamiliar').textContent = fam;
   document.getElementById('sumNew').textContent      = nw;
 
-  // 3-line post-walk summary
   const line1 = fam >= nw
     ? `Network produced <b>${sig} Signal</b> — concentrated <b>${RESIDUE[cfg.doctrine]}</b> from familiar infrastructure.`
     : `Network produced <b>${sig} Signal</b> — variety yield from <b>${nw} new topology signatures</b>.`;
@@ -1372,17 +2086,18 @@ function endWalk() {
   show('screen-summary');
 }
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  RESET
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 function resetToConfig() {
   document.getElementById('companionFeed').innerHTML = '';
+  document.documentElement.style.setProperty('--d-accent', '#00d4ff');
   show('screen-config');
 }
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  INIT
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 show('screen-config');
 </script>
 </body>
